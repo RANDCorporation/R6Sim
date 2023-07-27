@@ -4,6 +4,8 @@
 # R6Sim
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/RANDCorporation/R6Sim/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RANDCorporation/R6Sim/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 `R6Sim` provides an `R6`-based framework for simulation modeling in R
