@@ -1,0 +1,32 @@
+Type: Package
+Package: R6Sim
+Title: R6-based Simulation Modeling Toolkit
+Version: 0.1.0
+Authors@R: 
+    person("Pedro", "Nascimento de Lima", , "plima@rand.org", role = c("cre", "aut"),
+           comment = c(ORCID = "0000-0001-9057-198X"))
+Description: Provides an encapsulated object-oriented programming (OOP)
+    framework for simulation modeling studies.
+License: MIT + file LICENSE
+Imports: 
+    assertthat,
+    data.table,
+    doSNOW,
+    dplyr,
+    foreach,
+    imabc,
+    jsonlite,
+    lhs,
+    magrittr,
+    parallel,
+    progress,
+    R6,
+    readxl,
+    snow,
+    stats,
+    tidyr,
+    utils,
+    yaml
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.3
