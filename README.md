@@ -9,10 +9,10 @@
 <!-- badges: end -->
 
 `R6Sim` provides an `R6`-based framework for simulation modeling in R
-for modelers who like their models object-oriented. This requires you
-specify your simulation models as `R6` classes, and in return, provides
-a set of tools to help you organize your simulation modeling study by
-specifying your model and your simulation experiment as a class.
+for those who would like the encapsulated object-oriented programming
+approach provided by `R6`. This package allows one to create a model
+that inherits`R6Sim`, and specify experimental designs using multiple
+models.
 
 ## Installation
 
