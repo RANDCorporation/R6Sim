@@ -1,7 +1,7 @@
 
 #------------------------------------------------------------------------------#
 #
-# c19model: COVID-19 population and agent-based simulation models
+# R6Sim: R6-based Simulation Modeling Toolkit
 #
 # Author: Pedro Nascimento de Lima
 # See LICENSE.txt and README.txt for information on usage and licensing
@@ -95,51 +95,51 @@ R6Experiment_set_design = function(self, n_lhs, blocks, grid_design_df, convert_
   names(grid_params) = sub(pattern = '.values',replacement =  '',x = names(grid_params))
 
 
-  # Obtaining a table for models and their parameters in the posterior:
+  # Obtaining a table for models and their parameters in the params:
   models_df = data.frame(model.name = sapply(self$models, '[[',"name")) %>%
     dplyr::mutate(model.id = dplyr::row_number())
 
-  # Assign model ids to their posterior tables:
+  # Assign model ids to their params tables:
   for(model_id in models_df$model.id) {
-    # Assign the model id to the posteriors table:
-    self$models[[model_id]]$posterior_params$model.id <- model_id
+    # Assign the model id to the params table:
+    self$models[[model_id]]$params_df$model.id <- model_id
   }
 
   # This is a very compact way of getting exactly two columns that are within the self$models objects.
   # param.id is the parameter id within each model
-  # all.posteriors.id is an id referring to the experiment design. nrow(all_models_posteriors) = max(all.posteriors.id)
-  all_models_posteriors = do.call(rbind, lapply(lapply(self$models, '[[', "posterior_params"), get_ids_from_posterior)) %>%
-    dplyr::mutate(all.posteriors.id = dplyr::row_number())
+  # all.params.id is an id referring to the experiment design. nrow(all_models_params) = max(all.params.id)
+  all_models_params = do.call(rbind, lapply(lapply(self$models, '[[', "params_df"), get_ids_from_params)) %>%
+    dplyr::mutate(all.params.id = dplyr::row_number())
 
-  # Posterior Experimental Design:
-  # The posterior experimental design defines the design to be run including only variation in the posterior distribution of the model.
+  # params Experimental Design:
+  # The params experimental design defines the design to be run including only variation in the params distribution of the model.
 
-  posterior_design = all_models_posteriors %>%
-    dplyr::mutate(posterior_design.id = row_number())
+  params_design = all_models_params %>%
+    dplyr::mutate(params_design.id = row_number())
 
   # Policy Experimental Design:
   # The Policy design is the combination of all experimental parameters:
-  policy_design = expand.grid(grid_params$grid.id, lhs_experiments$lhs.id, posterior_design$posterior_design.id)
-  names(policy_design) = c("grid.id", "lhs.id", "posterior_design.id")
+  policy_design = expand.grid(grid_params$grid.id, lhs_experiments$lhs.id, params_design$params_design.id)
+  names(policy_design) = c("grid.id", "lhs.id", "params_design.id")
 
   policy_design = policy_design %>%
-    dplyr::left_join(posterior_design, by = "posterior_design.id")
+    dplyr::left_join(params_design, by = "params_design.id")
 
   # Assert that the Names of Alternative tables don't collide.
-  all_collumns = c(names(posterior_design), names(lhs_experiments), names(grid_params), "block.id")
+  all_collumns = c(names(params_design), names(lhs_experiments), names(grid_params), "block.id")
 
   duplicated_names = all_collumns[duplicated(all_collumns)]
   assertthat::assert_that({
     length(duplicated_names)==0
   }, msg = paste0("The names of these parameters are duplicated: ", duplicated_names))
 
-  # Setting all posteriors object:
-  self$posteriors = all_models_posteriors
+  # Setting all params object:
+  self$params = all_models_params
   self$grid = grid_params
   self$lhs = lhs_experiments
   self$blocks = blocks
 
-  # Defining the full experimental design table (it doesn't include parameters in the posteriors because those can be different by model)
+  # Defining the full experimental design table (it doesn't include parameters in the params because those can be different by model)
   policy_design = policy_design %>%
     left_join(grid_params, by = "grid.id") %>%
     left_join(lhs_experiments, by = "lhs.id") %>%
@@ -148,7 +148,7 @@ R6Experiment_set_design = function(self, n_lhs, blocks, grid_design_df, convert_
   # Save Experimental Design as a data.tables and json objects:
 
   # For the Natural history design:
-  self$posterior_design = data.table::as.data.table(posterior_design)
+  self$params_design = data.table::as.data.table(params_design)
 
   # For the Screening design
   self$policy_design = data.table::as.data.table(policy_design)
@@ -172,8 +172,8 @@ convert_lhs_param_to_grid  = function(parameter, lhs_to_grid_midpoints) {
   parameter
 }
 
-# Creating a table with all models posteriors and their parameters ids.
-# This auxiliary function selects two columns from the posterior:
-get_ids_from_posterior = function(posterior) {
-  posterior[,c("param.id", "model.id")]
+# Creating a table with all models params and their parameters ids.
+# This auxiliary function selects two columns from the params:
+get_ids_from_params = function(params) {
+  params[,c("param.id", "model.id")]
 }

@@ -34,6 +34,7 @@ R6Sim <- R6::R6Class(
 
     #' @field name is a character string representing the model name.
     name = NULL,
+
     #' @field inputs is a list of model inputs. One can add inputs to the object with the set_input function.
     inputs = NULL,
 
@@ -81,7 +82,7 @@ R6Sim <- R6::R6Class(
     #' Get Inputs
     #'
     #' @details
-    #' Use this function to get inputs from a spreadsheet or yaml file
+    #' Use this function to get model inputs from a spreadsheet or yaml file
     #'
     #' @param source either a path to a xlsx or yaml file, or a function that returns a named list of new inputs to be added to the model.
     #' @importFrom yaml read_yaml
@@ -89,7 +90,6 @@ R6Sim <- R6::R6Class(
     #' @importFrom readxl excel_sheets
     get_inputs = function(source) {
 
-      # Use these options if source is a characted
 
       stopifnot(is.character(source))
       stopifnot(length(source)==1)
@@ -143,21 +143,20 @@ R6Sim <- R6::R6Class(
     },
 
     #' @description
-    #' Set Posterior distribution of model parameters
+    #' Set distribution of model parameters
     #'
     #' @details
-    #' Use this function to add a new input to a R6Sim object.
-    #' All model inputs shoulhd be added or modified through this function. Inputs can be vectors or lists of strings, numeric or integers, to guarantee that they can be translated to and from JSON without any issues.
+    #' Use this function to set a distribution of model parameters to the model. This is useful when we want to sample from a posterior distribution of model parameters.
     #'
-    #' @param posteriors_list named list of one more more data.frames containing the posterior of model parameters.
-    #' @param posterior_weights character indicating the name of the column that contain weights to be used when sampling from the posterior
+    #' @param params_list named list of one more more data.frames containing a distribution of model parameters.
+    #' @param param_dist_weights character indicating the name of the column that contain weights to be used when sampling from the posterior
     #' @param cols_to_ignore character vector of columns name to ignore. This is useful when the posterior files contain columns that are not parameters and are not inputs to the model.
-    #' @param n_posterior the size of the sample to take from each posterior file.
+    #' @param n_sample the size of the sample to take from each posterior file.
     #' @param use_average T if one wants to use the average value of all parameters rather than the mean
     #' @param seed random seed to use when sampling from the posterior
     #' @param resample if T, samples from the posterior using the posterior weights. Otherwise, returns the full posterior, and preservers the weights.
-    set_posterior = function(posteriors_list, posterior_weights, cols_to_ignore = NULL, n_posterior = 1000, use_average = F, seed = 12345678, resample = T){
-      R6Sim_set_posterior(self = self, posteriors_list = posteriors_list, posterior_weights = posterior_weights, cols_to_ignore = cols_to_ignore, use_average = use_average, n_posterior = n_posterior, seed = seed, resample = resample)
+    set_param_dist = function(params_list, param_dist_weights, cols_to_ignore = NULL, n_sample = 1000, use_average = F, seed = 12345678, resample = T){
+      R6Sim_set_param_dist(self = self, param_dists_list = params_list, param_dist_weights = param_dist_weights, cols_to_ignore = cols_to_ignore, use_average = use_average, n_sample = n_sample, seed = seed, resample = resample)
     },
 
     #' @description

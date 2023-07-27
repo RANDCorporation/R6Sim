@@ -11,13 +11,19 @@ This class implements a `R6Experiment`.
 \describe{
 \item{\code{models}}{is a list containing c19model objects.}
 
+\item{\code{blocks}}{number of population blocks for cases when we want to paralellize individual-level simulations.}
+
 \item{\code{exp_design}}{is a data.frame containing one row per experiment to be run.}
 
 \item{\code{grid}}{is a data.frame containing one row per point in the grid experimental design.}
 
 \item{\code{lhs}}{is a table containing one row per point in the Latin Hypercube experimental design.}
 
-\item{\code{posteriors}}{is a data.frame containing one row per parameter set defined in the posterior of each model included in the experiment.}
+\item{\code{params}}{is a data.frame containing one row per parameter set defined in the params object of each model included in the experiment.}
+
+\item{\code{params_design}}{is a data.frame containing one row per parameter set defined in the params object of each model included in the experiment.}
+
+\item{\code{policy_design}}{is a data.frame containing one row per policy experiment.}
 
 \item{\code{experimental_parameters}}{is a list containing details about each experimental parameter. Experimental parameters can be either policy levers or uncertainties. Defining this distinction is up to the user.}
 }

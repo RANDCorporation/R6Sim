@@ -34,7 +34,7 @@ simulate
 \item \href{#method-R6Sim-get_inputs}{\code{R6Sim$get_inputs()}}
 \item \href{#method-R6Sim-to_json}{\code{R6Sim$to_json()}}
 \item \href{#method-R6Sim-set_inputs_from_json}{\code{R6Sim$set_inputs_from_json()}}
-\item \href{#method-R6Sim-set_posterior}{\code{R6Sim$set_posterior()}}
+\item \href{#method-R6Sim-set_param_dist}{\code{R6Sim$set_param_dist()}}
 \item \href{#method-R6Sim-simulate}{\code{R6Sim$simulate()}}
 \item \href{#method-R6Sim-make_priors}{\code{R6Sim$make_priors()}}
 \item \href{#method-R6Sim-make_targets}{\code{R6Sim$make_targets()}}
@@ -107,7 +107,7 @@ Get Inputs
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-Use this function to get inputs from a spreadsheet or yaml file
+Use this function to get model inputs from a spreadsheet or yaml file
 }
 
 }
@@ -153,16 +153,16 @@ Use this function to set model inputs from a JSON string. Note that the posterio
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-R6Sim-set_posterior"></a>}}
-\if{latex}{\out{\hypertarget{method-R6Sim-set_posterior}{}}}
-\subsection{Method \code{set_posterior()}}{
-Set Posterior distribution of model parameters
+\if{html}{\out{<a id="method-R6Sim-set_param_dist"></a>}}
+\if{latex}{\out{\hypertarget{method-R6Sim-set_param_dist}{}}}
+\subsection{Method \code{set_param_dist()}}{
+Set distribution of model parameters
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Sim$set_posterior(
-  posteriors_list,
-  posterior_weights,
+\if{html}{\out{<div class="r">}}\preformatted{R6Sim$set_param_dist(
+  params_list,
+  param_dist_weights,
   cols_to_ignore = NULL,
-  n_posterior = 1000,
+  n_sample = 1000,
   use_average = F,
   seed = 12345678,
   resample = T
@@ -172,13 +172,13 @@ Set Posterior distribution of model parameters
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{posteriors_list}}{named list of one more more data.frames containing the posterior of model parameters.}
+\item{\code{params_list}}{named list of one more more data.frames containing a distribution of model parameters.}
 
-\item{\code{posterior_weights}}{character indicating the name of the column that contain weights to be used when sampling from the posterior}
+\item{\code{param_dist_weights}}{character indicating the name of the column that contain weights to be used when sampling from the posterior}
 
 \item{\code{cols_to_ignore}}{character vector of columns name to ignore. This is useful when the posterior files contain columns that are not parameters and are not inputs to the model.}
 
-\item{\code{n_posterior}}{the size of the sample to take from each posterior file.}
+\item{\code{n_sample}}{the size of the sample to take from each posterior file.}
 
 \item{\code{use_average}}{T if one wants to use the average value of all parameters rather than the mean}
 
@@ -189,8 +189,7 @@ Set Posterior distribution of model parameters
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-Use this function to add a new input to a R6Sim object.
-All model inputs shoulhd be added or modified through this function. Inputs can be vectors or lists of strings, numeric or integers, to guarantee that they can be translated to and from JSON without any issues.
+Use this function to set a distribution of model parameters to the model. This is useful when we want to sample from a posterior distribution of model parameters.
 }
 
 }

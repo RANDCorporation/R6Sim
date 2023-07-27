@@ -2,7 +2,7 @@
 
 #------------------------------------------------------------------------------#
 #
-# c19model: COVID-19 population and agent-based simulation models
+# R6Sim: R6-based Simulation Modeling Toolkit
 #
 # Author: Pedro Nascimento de Lima
 # See LICENSE.txt and README.txt for information on usage and licensing
@@ -28,6 +28,9 @@ R6Experiment <- R6::R6Class(
     #' @field models is a list containing c19model objects.
     models = NULL,
 
+    #' @field blocks number of population blocks for cases when we want to paralellize individual-level simulations.
+    blocks = NULL,
+
     #' @field exp_design is a data.frame containing one row per experiment to be run.
     exp_design = NULL,
 
@@ -37,8 +40,15 @@ R6Experiment <- R6::R6Class(
     #' @field lhs is a table containing one row per point in the Latin Hypercube experimental design.
     lhs = NULL,
 
-    #' @field posteriors is a data.frame containing one row per parameter set defined in the posterior of each model included in the experiment.
-    posteriors = NULL,
+    #' @field params is a data.frame containing one row per parameter set defined in the params object of each model included in the experiment.
+    params = NULL,
+
+    # Note from crcrdm: params design is the old natural history design, and policy design is the screening desing.
+    #' @field params_design is a data.frame containing one row per parameter set defined in the params object of each model included in the experiment.
+    params_design = NULL,
+
+    #' @field policy_design is a data.frame containing one row per policy experiment.
+    policy_design = NULL,
 
     #' @field experimental_parameters is a list containing details about each experimental parameter. Experimental parameters can be either policy levers or uncertainties. Defining this distinction is up to the user.
     experimental_parameters = list(),

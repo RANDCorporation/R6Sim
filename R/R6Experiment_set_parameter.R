@@ -2,7 +2,7 @@
 
 #------------------------------------------------------------------------------#
 #
-# c19model: COVID-19 population and agent-based simulation models
+# R6Sim: R6-based Simulation Modeling Toolkit
 #
 # Author: Pedro Nascimento de Lima
 # See LICENSE.txt and README.txt for information on usage and licensing
