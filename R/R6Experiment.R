@@ -74,7 +74,7 @@ R6Experiment <- R6::R6Class(
     #' @param values use when experimental_design = "grid". This should be a vector including the values to be included in a grid experimental design. Please use parameters and values that can be converted to strings without any issues.
     #' @param min use when experimental_design = "lhs". This should be a numeric value indicating the minimum bound in the Latin Hypercube sample.
     #' @param max use when experimental_design = "lhs". This should be a numeric value indicating the minimum bound in the Latin Hypercube sample.
-    set_parameter = function(parameter_name, experimental_design, values, min, max){
+    set_parameter = function(parameter_name, experimental_design, values, min, max) {
       R6Experiment_set_parameter(self = self, parameter_name = parameter_name, experimental_design = experimental_design, values = values, min = min, max = max)
     },
 
@@ -91,7 +91,7 @@ R6Experiment <- R6::R6Class(
     #' @param grid_design_df a data.frame containing a pre-existing experimental design to be used. This function will use this experimental design in lieu of parameters defined in the grid, so this effectively replaces any set of parameters that are part of a grid design.
     #' @param convert_lhs_to_grid Default is FALSE. If TRUE, this function convert the LHS parameters to "grid" parameters. This is useful when one needs to test the "corners" of the experimental design before performing a full LHS run.
     #' @param lhs_to_grid_midpoints Only relevant when convert_to_lhs = T. Default value is 0. This should be an integer determining how many points within the grid hypercube should be created for the parameters being converted from LHS to a GRID design. For example, if convert_lhs_to_grid = T and lhs_to_grid_midpoints = 0, this function will create a full factorial design of the LHS parameters with 2^n points. If one wants to use one midpoint, then the design will have 3^n points, and so on. This parameter does not affect parameters orignally defined as part of a grid design because their values have already been set.
-    set_design = function(n_lhs, blocks = 1, grid_design_df, convert_lhs_to_grid = F, lhs_to_grid_midpoints = 0){
+    set_design = function(n_lhs, blocks = 1, grid_design_df, convert_lhs_to_grid = F, lhs_to_grid_midpoints = 0) {
       R6Experiment_set_design(self = self, n_lhs = n_lhs, blocks = blocks, grid_design_df = grid_design_df, convert_lhs_to_grid = convert_lhs_to_grid, lhs_to_grid_midpoints = lhs_to_grid_midpoints)
     },
 
@@ -104,62 +104,70 @@ R6Experiment <- R6::R6Class(
     #' @param path folder where json experimental designs should be saved. Do not specify a file name. If missing, the function will return the design specified below.
     #' @param write_inputs if TRUE (default), writes model inputs to json. Might be unnecessary when inputs are set in the model run script.
     #' @param format "json" or "csv". the natural history design must be written to json, whereas the screening design can be written to json or csv.
-    write_design = function(path, write_inputs = T, format = c("json","csv")){
+    write_design = function(path, write_inputs = T, format = c("json", "csv")) {
 
       # Checking arguments, selecting defaults:
       format <- match.arg(format)
 
       dir.create(path, showWarnings = F)
 
-      file_name <- paste0(path,"/exp_design.txt")
+      file_name <- paste0(path, "/exp_design.txt")
 
-      if(format == "json") {
-        json_exp_design = R6Experiment_to_json(self = self,
-                                                experimental_design = self$exp_design,
-                                                write_inputs = write_inputs)
-
-        message(paste0("Writing Experimental Design JSON File with ",
-                       nrow(json_exp_design), " json rows.")
+      if (format == "json") {
+        json_exp_design <- R6Experiment_to_json(
+          self = self,
+          experimental_design = self$exp_design,
+          write_inputs = write_inputs
         )
 
-        write.table(x = json_exp_design,
-                    file = file_name,
-                    row.names = F, col.names = F,quote = F)
+        message(paste0(
+          "Writing Experimental Design JSON File with ",
+          nrow(json_exp_design), " json rows."
+        ))
 
+        write.table(
+          x = json_exp_design,
+          file = file_name,
+          row.names = F, col.names = F, quote = F
+        )
       }
 
-      if(format == "csv") {
-        csv_exp_design = R6Experiment_to_csv(self = self,
-                                              experimental_design = self$exp_design,
-                                              write_inputs = write_inputs) %>%
-          mutate(across(where(is.logical), .fns = ~as.numeric(.x)))
+      if (format == "csv") {
+        csv_exp_design <- R6Experiment_to_csv(
+          self = self,
+          experimental_design = self$exp_design,
+          write_inputs = write_inputs
+        ) %>%
+          mutate(across(where(is.logical), .fns = ~ as.numeric(.x)))
 
-        message(paste0("Writing Experimental Design CSV File with ",
-                       nrow(csv_exp_design),
-                       " rows.")
-        )
+        message(paste0(
+          "Writing Experimental Design CSV File with ",
+          nrow(csv_exp_design),
+          " rows."
+        ))
 
         # Write file:
-        write.table(x = csv_exp_design,
-                    file = file_name,
-                    row.names = F, col.names = F, append = F, sep = ",")
+        write.table(
+          x = csv_exp_design,
+          file = file_name,
+          row.names = F, col.names = F, append = F, sep = ","
+        )
 
         # Write column names:
-        write.table(x = names(csv_exp_design),
-                    file = paste0(path,"/exp_design_col_names.txt"),
-                    row.names = F, col.names = F, append = F, sep = ",")
-
+        write.table(
+          x = names(csv_exp_design),
+          file = paste0(path, "/exp_design_col_names.txt"),
+          row.names = F, col.names = F, append = F, sep = ","
+        )
       }
-
     }
-
   ),
   # Use private to hold data that will not be accessed by the user directly.
   private = list(
     # Private objects are not documented and exported as R6 fields:
-    #character vector with names of data.frame objects. This is used when converting objects to and from json.
+    # character vector with names of data.frame objects. This is used when converting objects to and from json.
     df_objects = c("inputs_table"),
-    #character vector of list of objects to convert to and from
+    # character vector of list of objects to convert to and from
     json_objects = c("inputs", "inputs_table")
   ),
   # Use active binding functions to get and set the private data
@@ -174,6 +182,6 @@ R6Experiment <- R6::R6Class(
 #'
 #' @return TRUE if object is a `R6Experiment`
 #' @export
-is.R6Experiment = function(x){
+is.R6Experiment <- function(x) {
   "R6Experiment" %in% class(x)
 }
