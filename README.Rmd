@@ -19,7 +19,9 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/RANDCorporation/R6Sim/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RANDCorporation/R6Sim/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-`R6Sim` provides an `R6`-based framework for simulation modeling in R for those who would like the encapsulated object-oriented programming approach provided by `R6`. This package allows one to create a model that inherits`R6Sim`, and specify experimental designs using multiple models.
+`R6Sim` provides an `R6` base class for simulation modeling for those who appreciate the structure of encapsulated object-oriented programming provided by `R6`. This package allows one to create a model that inherits `R6Sim`, and specify experimental designs that potentially use multiple models using the `R6Experiment` class.
+
+We use `R6Sim` across multiple projects, and the purpose of releasing it publicly is to facilitate reproducibility and enhance the quality, agility and reliability of code used in simulation-based policy research projects.
 
 ## Installation
 
@@ -30,8 +32,6 @@ You can install the development version of `R6Sim` like so:
 # install.packages("remotes")
 # install from github:
 remotes::install_github("randcorporation/r6sim")
-# or install from CRAN (in the near future)
-install.packages("R6Sim")
 ```
 
 ## Contact

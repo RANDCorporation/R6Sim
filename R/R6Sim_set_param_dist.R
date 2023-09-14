@@ -2,7 +2,7 @@
 
 #------------------------------------------------------------------------------#
 #
-# CRCRDM: Robust Decision Making tools for Colorectal Cancer Screening Models
+# R6Sim: R6-based Simulation Modeling Toolkit
 #
 # Author: Pedro Nascimento de Lima
 # See LICENSE.txt and README.txt for information on usage and licensing

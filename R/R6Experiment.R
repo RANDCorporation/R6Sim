@@ -9,7 +9,7 @@
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#
-# c19 experiment Class
+# R6Experiment Class
 # Purpose: The R6Experiment contains one or more models...
 #------------------------------------------------------------------------------#
 
@@ -25,7 +25,7 @@ R6Experiment <- R6::R6Class(
   # Use public to expose methods of this class:
   public = list(
 
-    #' @field models is a list containing c19model objects.
+    #' @field models is a list containing R6Sim objects.
     models = NULL,
 
     #' @field blocks number of population blocks for cases when we want to paralellize individual-level simulations.
@@ -43,7 +43,7 @@ R6Experiment <- R6::R6Class(
     #' @field params is a data.frame containing one row per parameter set defined in the params object of each model included in the experiment.
     params = NULL,
 
-    # Note from crcrdm: params design is the old natural history design, and policy design is the screening desing.
+    # Note: params design is the old natural history design, and policy design is the policy desing.
     #' @field params_design is a data.frame containing one row per parameter set defined in the params object of each model included in the experiment.
     params_design = NULL,
 
@@ -55,7 +55,7 @@ R6Experiment <- R6::R6Class(
 
     #' @description
     #' This function is used to initialize a `R6Experiment` object. This object represents an experiment that will be run and can encompass multiple models.
-    #' @param ... set of c19models to be included in the experiment. One `R6Experiment` can contain multiple models of the `c19model` class.
+    #' @param ... set of R6Sim to be included in the experiment. One `R6Experiment` can contain multiple models of the `c19model` class.
     #' @return a new `R6Experiment` object.
     initialize = function(...) {
       self$models <- list(...)
@@ -82,9 +82,9 @@ R6Experiment <- R6::R6Class(
     #' Set Experimental Design
     #'
     #' @details
-    #' Creates two data.frames that represent the experimental design" the `exp_design` for natural history experiments and the `screening_design` for screening experiments. These experimental designs are created based on the parameters defined by the set_parameter functions. The experimental design created by this function is useful to run a typical RDM analysis where each policy is evaluated across a LHS of deep uncertainties. To achieve that, define each policy lever as a grid parameter, and each uncertainty as an "lhs" uncertainty. Natural history uncertainties are often already defined in the model's posterior file and are also considered.
+    #' Creates two data.frames that represent the experimental design" the `exp_design` for natural history experiments and the `policy_design` for policy experiments. These experimental designs are created based on the parameters defined by the set_parameter functions. The experimental design created by this function is useful to run a typical RDM analysis where each policy is evaluated across a LHS of deep uncertainties. To achieve that, define each policy lever as a grid parameter, and each uncertainty as an "lhs" uncertainty. Natural history uncertainties are often already defined in the model's posterior file and are also considered.
     #' The natural history design will have `n_posterior` runs for each model in the experimental design.
-    #' The screening experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` \* `n_posterior` for each model in the experimental design.
+    #' The policy experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` \* `n_posterior` for each model in the experimental design.
     #'
     #' @param n_lhs The number of points in the Latin Hypercube Sample to be created.
     #' @param blocks is the number of population blocks to use to parallelize the runs across nodes.
@@ -103,7 +103,7 @@ R6Experiment <- R6::R6Class(
     #'
     #' @param path folder where json experimental designs should be saved. Do not specify a file name. If missing, the function will return the design specified below.
     #' @param write_inputs if TRUE (default), writes model inputs to json. Might be unnecessary when inputs are set in the model run script.
-    #' @param format "json" or "csv". the natural history design must be written to json, whereas the screening design can be written to json or csv.
+    #' @param format "json" or "csv". the natural history design must be written to json, whereas the policy design can be written to json or csv.
     write_design = function(path, write_inputs = T, format = c("json", "csv")) {
 
       # Checking arguments, selecting defaults:
@@ -160,8 +160,13 @@ R6Experiment <- R6::R6Class(
           row.names = F, col.names = F, append = F, sep = ","
         )
       }
+    },
+
+    run = function(n_cores = 3, parallel = T, cluster_eval_script) {
+      R6Experiment_run(self = self, n_cores = n_cores, parallel = parallel, cluster_eval_script = cluster_eval_script)
     }
   ),
+
   # Use private to hold data that will not be accessed by the user directly.
   private = list(
     # Private objects are not documented and exported as R6 fields:

@@ -145,14 +145,14 @@ R6Experiment_set_design <- function(self, n_lhs, blocks, grid_design_df, convert
   policy_design <- policy_design %>%
     left_join(grid_params, by = "grid.id") %>%
     left_join(lhs_experiments, by = "lhs.id") %>%
-    mutate(screening.exp.id = row_number())
+    mutate(policy.exp.id = row_number())
 
   # Save Experimental Design as a data.tables and json objects:
 
   # For the Natural history design:
   self$params_design <- data.table::as.data.table(params_design)
 
-  # For the Screening design
+  # For the policy design
   self$policy_design <- data.table::as.data.table(policy_design)
 
   invisible(self)

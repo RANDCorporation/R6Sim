@@ -49,7 +49,7 @@ R6Sim_to_json <- function(self, private, types) {
   return(json_model)
 }
 
-# Converts a JSON Object to a crcspin model object
+# Converts a JSON Object to a model object
 R6Sim_set_inputs_from_json <- function(self, json) {
   json_list <- jsonlite::unserializeJSON(json)
 

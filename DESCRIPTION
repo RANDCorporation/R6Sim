@@ -5,8 +5,8 @@ Version: 0.1.0
 Authors@R: 
     person("Pedro", "Nascimento de Lima", , "plima@rand.org", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0001-9057-198X"))
-Description: Provides an encapsulated object-oriented programming (OOP)
-    framework for simulation modeling studies.
+Description: Provides an R6-based encapsulated object-oriented programming (OOP)
+    framework for simulation modeling studies in R.
 License: MIT + file LICENSE
 Imports: 
     assertthat,

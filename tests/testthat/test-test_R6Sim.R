@@ -35,7 +35,7 @@ Mymodel <- R6::R6Class(
 
 # Creating a model object -------------------------------------------------
 
-# Creates a CRC model object and gives it a name.
+# Creates a model object and gives it a name.
 model = Mymodel$new(name = "test")
 
 test_that("R6Sim was created", {
@@ -49,9 +49,9 @@ model$
   set_input(name = "risk.mean",value = 0.15,type = "natural_history")$
   set_input(name = "risk.sd",value = 0.02,type = "natural_history")$
   set_input(name = "trials",value = 10,type = "natural_history")$
-  set_input(name = "strategy.id",value = 1,type = "screening")$
-  set_input(name = "some_date",value = "2020-01-01",type = "screening")$
-  set_input(name = "det.ratios",value = seq.default(from = 0, to = 1, length.out = 101),type = "screening")
+  set_input(name = "strategy.id",value = 1,type = "policy")$
+  set_input(name = "some_date",value = "2020-01-01",type = "policy")$
+  set_input(name = "det.ratios",value = seq.default(from = 0, to = 1, length.out = 101),type = "policy")
 
 # Setting an input twice:
 model$set_input(name = "risk.sd",value = 0.02,type = "natural_history")
@@ -210,19 +210,19 @@ test_that("R6Experiment works with pre-existing design", {
 # test_that("write_design can write to a file", {
 #   experiment$write_design(path = "./json-test")
 #
-#   expect_true(file.exists("./json-test/screening_design.txt"))
+#   expect_true(file.exists("./json-test/policy_design.txt"))
 #   expect_true(file.exists("./json-test/nh_design.txt"))
-#   file.remove("./json-test/screening_design.txt")
+#   file.remove("./json-test/policy_design.txt")
 #   file.remove("./json-test/nh_design.txt")
 #   file.remove("./json-test/")
 # })
 #
 # test_that("write_design also can write to csv", {
-#   experiment$write_design(path = "./json-test", design = "screening", format = "csv")
-#   expect_true(file.exists("./json-test/screening_design.txt"))
-#   expect_true(file.exists("./json-test/screening_design_col_names.txt"))
-#   file.remove("./json-test/screening_design.txt")
-#   file.remove("./json-test/screening_design_col_names.txt")
+#   experiment$write_design(path = "./json-test", design = "policy", format = "csv")
+#   expect_true(file.exists("./json-test/policy_design.txt"))
+#   expect_true(file.exists("./json-test/policy_design_col_names.txt"))
+#   file.remove("./json-test/policy_design.txt")
+#   file.remove("./json-test/policy_design_col_names.txt")
 #   file.remove("./json-test/")
 # })
 #

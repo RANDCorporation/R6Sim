@@ -161,8 +161,8 @@ R6Sim <- R6::R6Class(
     #' Runs the simulation model for a single parameter set.
     #'
     #' @details
-    #' This function is a wrapper around the user natural history function. It passes the `self` object and any other parameters provided to the function.
-    #' @param ... any set of parameters passed to this function will be passed along to the user natural history function.
+    #' The simulate method should be used to simulate a model run. All inputs used by the model should already have been defined before this function is called.
+    #' @param ... any set of parameters passed to this function will be passed along to the model simulate function.
     simulate = function(...) {
       stop("Simulate method must be implemented by your class.")
     },
@@ -174,7 +174,7 @@ R6Sim <- R6::R6Class(
     #' This function is a wrapper around the user natural history function. It passes the `self` object and any other parameters provided to the function.
     #' @param ... any set of parameters passed to this function will be passed along to the user natural history function.
     setup_run = function(...) {
-      stop("Simulate method must be implemented by your class.")
+      stop("Setup_run method must be implemented by your class.")
     },
 
     #' @description
@@ -260,10 +260,10 @@ R6Sim <- R6::R6Class(
     #' @param parallel if T, the model will run in parallel
     #' @param n_cores number of CPUs to use in the simulation. defaults to detectCores() - 2
     #' be passed along to the user natural history function.
-    simulate_posterior = function(parallel = T, n_cores = detectCores() - 2) {
+    simulate_posterior = function(parallel = T, n_cores = detectCores() - 2, cluster_eval_script) {
 
       # Simulate posterior distribution for a specific model
-      R6Sim_simulate_posterior(self = self, parallel = parallel, n_cores = n_cores)
+      R6Sim_simulate_posterior(self = self, parallel = parallel, n_cores = n_cores, cluster_eval_script = cluster_eval_script)
     }
   ),
 
