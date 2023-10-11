@@ -19,9 +19,9 @@ knitr::opts_chunk$set(
 [![R-CMD-check](https://github.com/RANDCorporation/R6Sim/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RANDCorporation/R6Sim/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-`R6Sim` provides an `R6` base class for simulation modeling for those who appreciate the structure of encapsulated object-oriented programming provided by `R6`. This package allows one to create a model that inherits `R6Sim`, and specify experimental designs that potentially use multiple models using the `R6Experiment` class.
+`R6Sim` provides an `R6` base class for simulation modeling analyses using the structure of encapsulated object-oriented programming provided by `R6`. This package allows one to create models that inherit `R6Sim`, and specify models and experimental designs that can use multiple models using the `R6Experiment` class.
 
-We use `R6Sim` across multiple projects, and the purpose of releasing it publicly is to facilitate reproducibility and enhance the quality, agility and reliability of code used in simulation-based policy research projects.
+We use `R6Sim` across multiple projects, and the purpose of releasing it publicly is to facilitate reproducibility and enhance the quality, agility and reliability of code used in simulation-based research projects.
 
 ## Installation
 

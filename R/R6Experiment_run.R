@@ -23,30 +23,26 @@
 #' @param n_cores number of cores to use
 #' @param parallel whether to evaluate run in parallel
 #' @param cluster_eval_script path to script that instantiates necessary functions. this will often mean sourcing functions external to the package and loading dependencies for the model. needed if parallel = T
-#'
+#' @param model_from_cluster_eval T if model is instantiated in the cluter eval scripts, F otherwise. Use T if using models that need compilation (like odin) and F otherwise.
 #' @return results data.frame from all simulations in parallel
 #'
 #' @import parallel
 #' @import doSNOW
 #' @import foreach
 #' @import progress
-R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script) {
+R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model_from_cluster_eval) {
 
-  # TODO: Continue here.
-  # browser()
 
+  # If we are running the experiment in parallel, we need to instantiate the models explicitly within each "node".
+  # if the model is self-contained, that should be enough.
   if (parallel) {
-    # PNL note: Decide whether to use snow:: or parallel:: makeCluster
 
-    browser()
-
-    cl <- parallel::makeCluster()
-
+    # Make cluster and evaluate the cluster eval script.
     cl <- snow::makeCluster(n_cores)
     doSNOW::registerDoSNOW(cl)
-    #snow::clusterExport(cl, "cluster_eval_script")
-    #snow::clusterEvalQ(cl, source(cluster_eval_script))
-    snow::clusterEvalQ(cl, source("./R/scripts/cluster_eval.R"))
+    snow::clusterExport(cl, "cluster_eval_script", envir = environment())
+    snow::clusterEvalQ(cl, source(cluster_eval_script))
+
   }
 
   # progress bar ------------------------------------------------------------
@@ -68,8 +64,19 @@ R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script) {
   # foreach loop ------------------------------------------------------------
   results <- foreach(i = 1:nrow(self$policy_design), .combine = rbind, .options.snow = opts) %dopar% {
 
-    # Assign model inputs:
-    model <- self$models[[self$policy_design$model.id[i]]]
+    if(!model_from_cluster_eval) {
+
+      model <- self$models[[self$policy_design$model.id[i]]]
+
+    } else {
+
+      stopifnot("cluster_experiment object not defined. Create an R6Experiment object called cluster_experiment in your cluster_eval_script file, containing the models used in this analysis." = exists("cluster_experiment"))
+
+      stopifnot("cluster_experiment object is not an R6Experiment. Make sure to use R6Experiment to create the cluster_experiment object." = is.R6Experiment(cluster_experiment))
+
+      model <- cluster_experiment$models[[self$policy_design$model.id[i]]]
+
+      }
 
     id_cols <- c("grid.id", "lhs.id", "params_design.id", "param.id", "model.id", "all.params.id", "policy.exp.id")
 
@@ -94,3 +101,4 @@ R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script) {
 
   return(results)
 }
+
