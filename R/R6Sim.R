@@ -18,10 +18,10 @@
 # Creation Date: August 2022
 #------------------------------------------------------------------------------#
 
-#' R6 Class Representing an `R6Sim`
+#' R6 Class Representing an `R6Sim` model
 #'
 #' @description
-#' This class implements an `R6Sim` model.
+#' This class implements an `R6Sim` model
 #'
 #' @import R6
 #' @export
