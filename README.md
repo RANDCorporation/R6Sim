@@ -20,32 +20,23 @@ Simulation modeling projects performed in R often rely on
 poorly-designed code bases, where the modeler and others don’t have
 visibility into what the model does and all the inputs the model needs
 to run. Often, there is a tight dependence on inputs that may live in
-the global environment, *or* the modeler adds an large set of function
-parameters that percolate through the code and are passed through
-several layers of functions.
+the global environment, *or* the modeler tends to add a large set of
+function parameters that percolate through the code and are passed
+through several layers of functions. This can be problematic when one
+simply wants to inspect the totality of the inputs that are influencing
+model outputs, but those inputs live at several layers in the code.
 
-My opinion is that one of the reasons for those problems is the overuse
-of the functional programming paradigm, whereas an encapsulated
-object-oriented paradigm could be helpful. In particular, I want my
-simulation models to be self-contained, and I want to be able to create
-simulation studies where I can extend the model to other use-cases and
-create experiments with multiple versions of the same model. After doing
-modeling projects in R for several years, I arrived at this simple
-pattern where the model is an R6 class, and there’s another class (which
-I call an experiment), that can include one *or more* models, and can
-run those models.
-
-Each model can have its own inputs, and one ore more joint probability
-distributions of model parameters (sometimes obtained via bayesian
-calibration). Then, all I want is to create an experiment and run it in
-parallel. And I don’t want to re-create that code architecture in every
-project. `R6Sim` is my current solution for this type of problem.
-`R6Sim` is a generalization of `crcrdm`, which I had created for cancer
-screening models.
+One potential cause of those problems is the overuse of the functional
+programming paradigm in cases where an encapsulated object-oriented
+paradigm could be helpful. After building models in R for a few years, I
+arrived at this simple pattern where the model is an `R6` class, and
+there is another class (which I call an experiment), that can include
+one *or more* models, and can run those models. `R6Sim` is a package
+that helps implement this modeling pattern.
 
 ## Installation
 
-You can install the development version of `R6Sim` like so:
+You can install `R6Sim` like so:
 
 ``` r
 # install the remotes package if you do not have it
