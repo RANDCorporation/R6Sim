@@ -73,7 +73,7 @@ R6Sim <- R6::R6Class(
     #' @param value input value. Can be a single value, a list or a vector.
     #' @param description sentence describing the meaning of this input.
     #' @param type optional character string defining the type of input. Useful when one wants to only write inputs of a certain type to json.
-    set_input = function(name, value, type = NA) {
+    set_input = function(name, value, type = NA_character_) {
       R6Sim_set_input(self = self, name = name, value = value, type = type)
     },
 
