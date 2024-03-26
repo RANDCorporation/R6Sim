@@ -32,7 +32,7 @@ R6Sim_set_param_dist <- function(self, param_dists_list, param_dist_weights, col
 
   # Setting a seed for reproducibility because this function will create a sample:
   if (!missing(seed)) {
-    #set.seed(seed = seed)
+    # set.seed(seed = seed)
   }
 
   # Checking Inputs:

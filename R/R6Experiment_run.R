@@ -54,7 +54,6 @@ R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model
     doSNOW::registerDoSNOW(cl)
     snow::clusterExport(cl, "cluster_eval_script", envir = environment())
     snow::clusterEvalQ(cl, source(cluster_eval_script))
-
   }
 
   # progress bar ------------------------------------------------------------
@@ -75,36 +74,30 @@ R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model
 
   # foreach loop ------------------------------------------------------------
   results <- foreach(i = 1:nrow(self$policy_design), .combine = rbind, .options.snow = opts) %dopar% {
-
-    if(!model_from_cluster_eval) {
-
+    if (!model_from_cluster_eval) {
       model <- self$models[[self$policy_design$model.id[i]]]
-
     } else {
-
       stopifnot("cluster_experiment object not defined. Create an R6Experiment object called cluster_experiment in your cluster_eval_script file, containing the models used in this analysis." = exists("cluster_experiment"))
 
       stopifnot("cluster_experiment object is not an R6Experiment. Make sure to use R6Experiment to create the cluster_experiment object." = is.R6Experiment(cluster_experiment))
 
       model <- cluster_experiment$models[[self$policy_design$model.id[i]]]
-
-      }
+    }
 
     id_cols <- c("grid.id", "lhs.id", "params_design.id", "param.id", "model.id", "all.params.id", "policy.exp.id")
 
-    scenario_inputs <- self$policy_design[i,] %>%
+    scenario_inputs <- self$policy_design[i, ] %>%
       select(-any_of(id_cols)) %>%
       as.data.frame()
 
     # Set each input
-    for(var in names(scenario_inputs)) {
-      model$set_input(var, scenario_inputs[,var])
+    for (var in names(scenario_inputs)) {
+      model$set_input(var, scenario_inputs[, var])
     }
 
     res <- model$simulate()
 
-    return(cbind(self$policy_design[i,],res))
-
+    return(cbind(self$policy_design[i, ], res))
   }
 
   if (parallel) {
@@ -113,4 +106,3 @@ R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model
 
   return(results)
 }
-

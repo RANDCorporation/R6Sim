@@ -173,7 +173,6 @@ R6Experiment <- R6::R6Class(
         )
       }
     },
-
     run = function(n_cores = 3, parallel = F, cluster_eval_script, model_from_cluster_eval = T) {
       R6Experiment_run(self = self, n_cores = n_cores, parallel = parallel, cluster_eval_script = cluster_eval_script, model_from_cluster_eval = model_from_cluster_eval)
     }
