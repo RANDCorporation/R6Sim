@@ -1,11 +1,23 @@
-
-
 #------------------------------------------------------------------------------#
-#
 # R6Sim: R6-based Simulation Modeling Toolkit
+# Copyright (C) 2024 by The RAND Corporation
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# See LICENSE.md and README.md for more information on usage and licensing
 #
 # Author: Pedro Nascimento de Lima
-# See LICENSE.txt and README.txt for information on usage and licensing
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#
@@ -96,7 +108,7 @@ R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model
   }
 
   if (parallel) {
-    stopCluster(cl)
+    snow::stopCluster(cl)
   }
 
   return(results)

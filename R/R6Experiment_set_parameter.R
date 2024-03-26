@@ -3,9 +3,9 @@
 #------------------------------------------------------------------------------#
 #
 # R6Sim: R6-based Simulation Modeling Toolkit
-#
+# Copyright (C) 2024 by The RAND Corporation
 # Author: Pedro Nascimento de Lima
-# See LICENSE.txt and README.txt for information on usage and licensing
+# See LICENSE.md and README.md for information on usage and licensing
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#

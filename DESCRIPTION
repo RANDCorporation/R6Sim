@@ -7,7 +7,7 @@ Authors@R:
            comment = c(ORCID = "0000-0001-9057-198X"))
 Description: Provides an R6-based encapsulated object-oriented programming (OOP)
     framework for simulation modeling studies in R.
-License: MIT + file LICENSE
+License: GPL (>= 3)
 Imports: 
     assertthat,
     data.table,
