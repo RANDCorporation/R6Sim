@@ -61,6 +61,6 @@ for questions related to this repository.
 
 ## License
 
-Copyright (C) 2023 by The [RAND Corporation](https://www.rand.org). This
-repository is released as open-source software under an MIT + license.
+Copyright (C) 2024 by The [RAND Corporation](https://www.rand.org). This
+repository is released as open-source software under a GPL-3 license.
 See the LICENSE.md file.

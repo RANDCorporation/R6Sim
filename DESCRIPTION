@@ -5,25 +5,20 @@ Version: 1.0.0
 Authors@R: 
     person("Pedro", "Nascimento de Lima", , "plima@rand.org", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0001-9057-198X"))
-Description: Provides an R6-based encapsulated object-oriented programming (OOP)
+Description: Provides an R6-based encapsulated object-oriented programming
     framework for simulation modeling studies in R.
 License: GPL (>= 3)
 Imports: 
     assertthat,
     data.table,
-    doSNOW,
     dplyr,
-    foreach,
-    imabc,
     jsonlite,
     lhs,
     magrittr,
     parallel,
-    progress,
     purrr,
     R6,
     readxl,
-    snow,
     stats,
     tidyr,
     utils,
@@ -32,8 +27,9 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
+VignetteBuilder: 
+    knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.2.3
-VignetteBuilder: knitr

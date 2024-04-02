@@ -110,4 +110,4 @@ results %>%
 
 ```
 
-Once you experiment runs, now you can iterate and add new inputs, or new parameters to your experiment, or add an arbitrary number of models to your experiment. To see a real use case with parallel runs, see the [value-of-surveillance](github.com/randcorporation/value-of-surveillance) project.
+Once you experiment runs, now you can iterate and add new inputs, or new parameters to your experiment, or add an arbitrary number of models to your experiment. To see a real use case with parallel runs, see the [value-of-surveillance](https:://github.com/randcorporation/value-of-surveillance) project.

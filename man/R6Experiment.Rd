@@ -9,7 +9,7 @@ This class implements a `R6Experiment`.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{models}}{is a list containing c19model objects.}
+\item{\code{models}}{is a list containing R6Sim objects.}
 
 \item{\code{blocks}}{number of population blocks for cases when we want to paralellize individual-level simulations.}
 
@@ -36,6 +36,7 @@ This class implements a `R6Experiment`.
 \item \href{#method-R6Experiment-set_parameter}{\code{R6Experiment$set_parameter()}}
 \item \href{#method-R6Experiment-set_design}{\code{R6Experiment$set_design()}}
 \item \href{#method-R6Experiment-write_design}{\code{R6Experiment$write_design()}}
+\item \href{#method-R6Experiment-run}{\code{R6Experiment$run()}}
 \item \href{#method-R6Experiment-clone}{\code{R6Experiment$clone()}}
 }
 }
@@ -51,7 +52,7 @@ This function is used to initialize a `R6Experiment` object. This object represe
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{...}}{set of c19models to be included in the experiment. One `R6Experiment` can contain multiple models of the `c19model` class.}
+\item{\code{...}}{set of R6Sim to be included in the experiment. One `R6Experiment` can contain multiple models of the `c19model` class.}
 }
 \if{html}{\out{</div>}}
 }
@@ -127,9 +128,9 @@ Set Experimental Design
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-Creates two data.frames that represent the experimental design" the `exp_design` for natural history experiments and the `screening_design` for screening experiments. These experimental designs are created based on the parameters defined by the set_parameter functions. The experimental design created by this function is useful to run a typical RDM analysis where each policy is evaluated across a LHS of deep uncertainties. To achieve that, define each policy lever as a grid parameter, and each uncertainty as an "lhs" uncertainty. Natural history uncertainties are often already defined in the model's posterior file and are also considered.
+Creates two data.frames that represent the experimental design" the `exp_design` for natural history experiments and the `policy_design` for policy experiments. These experimental designs are created based on the parameters defined by the set_parameter functions. The experimental design created by this function is useful to run a typical RDM analysis where each policy is evaluated across a LHS of deep uncertainties. To achieve that, define each policy lever as a grid parameter, and each uncertainty as an "lhs" uncertainty. Natural history uncertainties are often already defined in the model's posterior file and are also considered.
 The natural history design will have `n_posterior` runs for each model in the experimental design.
-The screening experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` \* `n_posterior` for each model in the experimental design.
+The policy experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` \* `n_posterior` for each model in the experimental design.
 }
 
 }
@@ -149,7 +150,11 @@ Write Experimental design to disk
 
 \item{\code{write_inputs}}{if TRUE (default), writes model inputs to json. Might be unnecessary when inputs are set in the model run script.}
 
-\item{\code{format}}{"json" or "csv". the natural history design must be written to json, whereas the screening design can be written to json or csv.}
+\item{\code{format}}{"json" or "csv". the natural history design must be written to json, whereas the policy design can be written to json or csv.
+Runs R6Experiment in parallel
+
+
+This function is most useful to simulate the posterior distribution for a single model in parallel in one machine. This function is not used when calibrating the model and not useful for parallelization across multiple nodes.}
 }
 \if{html}{\out{</div>}}
 }
@@ -157,6 +162,41 @@ Write Experimental design to disk
 Creates a data.frame in which each row represents a single experiment. The json object included in each row contains all information that the models need to re-create themselves in the server-side in a HPC workflow.
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-R6Experiment-run"></a>}}
+\if{latex}{\out{\hypertarget{method-R6Experiment-run}{}}}
+\subsection{Method \code{run()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run(
+  n_cores = 3,
+  parallel = F,
+  cluster_eval_script,
+  model_from_cluster_eval = T,
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{n_cores}}{number of cores to use}
+
+\item{\code{parallel}}{whether to evaluate run in parallel}
+
+\item{\code{cluster_eval_script}}{path to script that instantiates necessary functions. this will often mean sourcing functions external to the package and loading dependencies for the model. needed if parallel = T}
+
+\item{\code{model_from_cluster_eval}}{T if model is instantiated in the cluter eval scripts, F otherwise. Use T if using models that need compilation (like odin) and F otherwise.}
+
+\item{\code{...}}{additional parameters to be passed down to the `model$simulate()` function}
+
+\item{\code{self}}{experiment object}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+results data.frame from all simulations in parallel
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-R6Experiment-clone"></a>}}

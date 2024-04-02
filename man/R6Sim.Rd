@@ -2,12 +2,9 @@
 % Please edit documentation in R/R6Sim.R
 \name{R6Sim}
 \alias{R6Sim}
-\title{R6 Class Representing an `R6Sim`}
+\title{R6 Class Representing an `R6Sim` model}
 \description{
-This class implements an `R6Sim` model.
-}
-\seealso{
-simulate
+This class implements an `R6Sim` model
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -36,9 +33,7 @@ simulate
 \item \href{#method-R6Sim-set_inputs_from_json}{\code{R6Sim$set_inputs_from_json()}}
 \item \href{#method-R6Sim-set_param_dist}{\code{R6Sim$set_param_dist()}}
 \item \href{#method-R6Sim-simulate}{\code{R6Sim$simulate()}}
-\item \href{#method-R6Sim-make_priors}{\code{R6Sim$make_priors()}}
-\item \href{#method-R6Sim-make_targets}{\code{R6Sim$make_targets()}}
-\item \href{#method-R6Sim-simulate_posterior}{\code{R6Sim$simulate_posterior()}}
+\item \href{#method-R6Sim-setup_run}{\code{R6Sim$setup_run()}}
 \item \href{#method-R6Sim-clone}{\code{R6Sim$clone()}}
 }
 }
@@ -68,7 +63,7 @@ s new `R6Sim` object.
 \subsection{Method \code{set_input()}}{
 Set Input
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Sim$set_input(name, value, type = NA)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{R6Sim$set_input(name, value, type = NA_character_)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -205,75 +200,33 @@ Runs the simulation model for a single parameter set.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{...}}{any set of parameters passed to this function will be passed along to the model simulate function.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+The simulate method should be used to simulate a model run. All inputs used by the model should already have been defined before this function is called.
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-R6Sim-setup_run"></a>}}
+\if{latex}{\out{\hypertarget{method-R6Sim-setup_run}{}}}
+\subsection{Method \code{setup_run()}}{
+Sets parameters for a current run.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{R6Sim$setup_run(...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
 \item{\code{...}}{any set of parameters passed to this function will be passed along to the user natural history function.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
 This function is a wrapper around the user natural history function. It passes the `self` object and any other parameters provided to the function.
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-R6Sim-make_priors"></a>}}
-\if{latex}{\out{\hypertarget{method-R6Sim-make_priors}{}}}
-\subsection{Method \code{make_priors()}}{
-make priors for calibration (using the IMABC format)
-
-return an imabc priors object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Sim$make_priors(priors_file)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{priors_file}}{csv file name where priors should be saved, if any}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-R6Sim-make_targets"></a>}}
-\if{latex}{\out{\hypertarget{method-R6Sim-make_targets}{}}}
-\subsection{Method \code{make_targets()}}{
-make targets for calibration
-
-return an imabc targets object
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Sim$make_targets(targets_file)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{targets_file}}{csv file name where targets should be saved, if any}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-R6Sim-simulate_posterior"></a>}}
-\if{latex}{\out{\hypertarget{method-R6Sim-simulate_posterior}{}}}
-\subsection{Method \code{simulate_posterior()}}{
-Simulate Model Posterior Distribution of parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Sim$simulate_posterior(parallel = T, n_cores = detectCores() - 2)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{parallel}}{if T, the model will run in parallel}
-
-\item{\code{n_cores}}{number of CPUs to use in the simulation. defaults to detectCores() - 2
-be passed along to the user natural history function.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Details}{
-This function is used to simulate the model over the posterior distribution
-Before running this function, the user should run the set_posterior.
 }
 
 }

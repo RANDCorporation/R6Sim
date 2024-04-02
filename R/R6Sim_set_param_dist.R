@@ -150,10 +150,10 @@ calculate_weighted_averages <- function(df, param_dist_weights) {
   # Calculate the weighted average for every numeric variable:
   df %>%
     # Multiply value by the normalized weights:
-    mutate(across(where(is.numeric) & !c(.data$param_dist.df.id, .data$param_dist.df.name), ~ .x * df$normalized_weights)) %>%
-    select(-.data$normalized_weights) %>%
+    mutate(across(where(is.numeric) & !c(param_dist.df.id, param_dist.df.name), ~ .x * df$normalized_weights)) %>%
+    select(-normalized_weights) %>%
     # Add them up:
-    group_by(.data$param_dist.df.id, .data$param_dist.df.name) %>%
+    group_by(param_dist.df.id, param_dist.df.name) %>%
     summarise(across(where(is.numeric), sum), .groups = "drop") %>%
     as.data.frame()
 }

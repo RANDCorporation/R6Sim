@@ -34,46 +34,44 @@
 #'
 #' @return results data.frame from all simulations in parallel
 #'
-#' @import parallel
-#' @import doSNOW
-#' @import foreach
-#' @import progress
-R6Sim_simulate_posterior <- function(self, n_cores, parallel, cluster_eval_script) {
-  if (parallel) {
-    # PNL note: Decide whether to use snow:: or parallel:: makeCluster
-    cl <- snow::makeCluster(n_cores)
-    doSNOW::registerDoSNOW(cl)
-    clusterEvalQ(cl, source(cluster_eval_script))
-  }
-
-  # progress bar ------------------------------------------------------------
-  # Progress bar setup adapted from:
-  # https://stackoverflow.com/questions/5423760/how-do-you-create-a-progress-bar-when-using-the-foreach-function-in-r
-  pb <- progress_bar$new(
-    format = "R6Sim: simulating parm set = :ode_sim [:bar] :elapsed | eta: :eta",
-    total = nrow(self$posterior_params), # 100
-    width = 80
-  )
-
-  # allowing progress bar to be used in foreach -----------------------------
-  progress <- function(n) {
-    pb$tick(tokens = list(ode_sim = n))
-  }
-
-  opts <- list(progress = progress)
-
-  # foreach loop ------------------------------------------------------------
-  results <- foreach(i = 1:nrow(self$posterior_params), .combine = rbind, .options.snow = opts) %dopar% {
-    self$inputs$params <- as.numeric(self$posterior_params[i, self$inputs$priors$parameter_name])
-    names(self$inputs$params) <- self$inputs$priors$parameter_name
-    res <- self$simulate()
-    res$param.id <- i
-    return(res)
-  }
-
-  if (parallel) {
-    stopCluster(cl)
-  }
-
-  return(results)
-}
+#' import parallel
+#' import foreach
+#' import progress
+# R6Sim_simulate_posterior <- function(self, n_cores, parallel, cluster_eval_script) {
+#   if (parallel) {
+#     # PNL note: Decide whether to use snow:: or parallel:: makeCluster
+#     cl <- parallel::makeCluster(n_cores)
+#     clusterEvalQ(cl, source(cluster_eval_script))
+#   }
+#
+#   # progress bar ------------------------------------------------------------
+#   # Progress bar setup adapted from:
+#   # https://stackoverflow.com/questions/5423760/how-do-you-create-a-progress-bar-when-using-the-foreach-function-in-r
+#   pb <- progress_bar$new(
+#     format = "R6Sim: simulating parm set = :ode_sim [:bar] :elapsed | eta: :eta",
+#     total = nrow(self$posterior_params), # 100
+#     width = 80
+#   )
+#
+#   # allowing progress bar to be used in foreach -----------------------------
+#   progress <- function(n) {
+#     pb$tick(tokens = list(ode_sim = n))
+#   }
+#
+#   opts <- list(progress = progress)
+#
+#   # foreach loop ------------------------------------------------------------
+#   results <- foreach(i = 1:nrow(self$posterior_params), .combine = rbind, .options.snow = opts) %dopar% {
+#     self$inputs$params <- as.numeric(self$posterior_params[i, self$inputs$priors$parameter_name])
+#     names(self$inputs$params) <- self$inputs$priors$parameter_name
+#     res <- self$simulate()
+#     res$param.id <- i
+#     return(res)
+#   }
+#
+#   if (parallel) {
+#     stopCluster(cl)
+#   }
+#
+#   return(results)
+# }

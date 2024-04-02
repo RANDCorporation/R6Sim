@@ -186,97 +186,9 @@ R6Sim <- R6::R6Class(
     #' @param ... any set of parameters passed to this function will be passed along to the user natural history function.
     setup_run = function(...) {
       stop("Setup_run method must be implemented by your class.")
-    },
-
-    #' @description
-    #' make priors for calibration (using the IMABC format)
-    #'
-    #' return an imabc priors object
-    #'
-    #' @param priors_file csv file name where priors should be saved, if any
-    make_priors = function(priors_file) {
-      priors <- self$inputs$priors %>%
-        # clean up fixed parameters
-        mutate(
-          sd = ifelse(dist_base_name == "fixed", NA, sd),
-          min = ifelse(dist_base_name == "fixed", NA, min),
-          max = ifelse(dist_base_name == "fixed", NA, max),
-          a = ifelse(dist_base_name == "fixed", NA, a),
-          b = ifelse(dist_base_name == "fixed", NA, b)
-        ) %>%
-        # clean up uniform parameters:
-        mutate(mean = ifelse(dist_base_name == "unif", NA, mean)) %>%
-        # add a and b parameters for the truncated normal:
-        mutate(a = ifelse(dist_base_name == "truncnorm", min, NA)) %>%
-        mutate(b = ifelse(dist_base_name == "truncnorm", max, NA)) %>%
-        # clean up additional columns:
-        select(-any_of(c("ideal_dist_base_name", "reported_prior"))) %>%
-        imabc::as.priors()
-
-      if (!missing(priors_file)) {
-        write.csv(as.data.frame(priors), file = priors_file)
-      }
-
-      return(priors)
-    },
-
-    #' @description
-    #' make targets for calibration
-    #'
-    #' return an imabc targets object
-    #'
-    #' @param targets_file csv file name where targets should be saved, if any
-    #' @importFrom imabc as.priors
-    #' @importFrom imabc as.targets
-    #' @importFrom imabc imabc
-    make_targets = function(targets_file) {
-
-      # this name can't change.
-      time_variable <- "week"
-      target_variables <- names(self$inputs$t_tol)[-c(1, 2)]
-
-      targets_df <- get_long_target_df(self$inputs$t_series, target_variables)
-
-      tolerances_df <- get_long_target_df(self$inputs$t_tol, target_variables)
-
-      init_tolerances_df <- get_long_target_df(self$inputs$t_ini_tol, target_variables)
-
-      # create imabc target object:
-      imabc_targets <- data.frame(
-        target_names = targets_df$target_names,
-        target_groups = targets_df$target_groups,
-        targets = targets_df$value,
-        current_lower_bounds = targets_df$value - init_tolerances_df$value,
-        current_upper_bounds = targets_df$value + init_tolerances_df$value,
-        stopping_lower_bounds = targets_df$value - tolerances_df$value,
-        stopping_upper_bounds = targets_df$value + tolerances_df$value
-      ) %>%
-        imabc::as.targets(.)
-
-      # Write csv data for imabc:
-      if (!missing(targets_file)) {
-        write.csv(x = as.data.frame(imabc_targets), file = targets_file, row.names = F)
-      }
-
-      return(imabc_targets)
-    },
-
-    #' @description
-    #' Simulate Model Posterior Distribution of parameters
-    #'
-    #' @details
-    #' This function is used to simulate the model over the posterior distribution
-    #' Before running this function, the user should run the set_posterior.
-    #' @seealso simulate
-    #' @param parallel if T, the model will run in parallel
-    #' @param n_cores number of CPUs to use in the simulation. defaults to detectCores() - 2
-    #' be passed along to the user natural history function.
-    simulate_posterior = function(parallel = T, n_cores = detectCores() - 2, cluster_eval_script) {
-
-      # Simulate posterior distribution for a specific model
-      R6Sim_simulate_posterior(self = self, parallel = parallel, n_cores = n_cores, cluster_eval_script = cluster_eval_script)
     }
-  ),
+
+    ),
 
   # Use private to hold data that will not be accessed by the user directly.
   private = list(

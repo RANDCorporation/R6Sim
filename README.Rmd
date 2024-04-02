@@ -54,4 +54,4 @@ Reach out to [Pedro Nascimento de Lima](https://www.rand.org/about/people/l/lima
 
 ## License 
 
-Copyright (C) 2023 by The [RAND Corporation](https://www.rand.org). This repository is released as open-source software under an MIT + license. See the LICENSE.md file.
+Copyright (C) 2024 by The [RAND Corporation](https://www.rand.org). This repository is released as open-source software under a GPL-3 license. See the LICENSE.md file.

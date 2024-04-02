@@ -173,8 +173,21 @@ R6Experiment <- R6::R6Class(
         )
       }
     },
-    run = function(n_cores = 3, parallel = F, cluster_eval_script, model_from_cluster_eval = T) {
-      R6Experiment_run(self = self, n_cores = n_cores, parallel = parallel, cluster_eval_script = cluster_eval_script, model_from_cluster_eval = model_from_cluster_eval)
+
+    #' Runs R6Experiment in parallel
+    #'
+    #'
+    #' This function is most useful to simulate the posterior distribution for a single model in parallel in one machine. This function is not used when calibrating the model and not useful for parallelization across multiple nodes.
+    #'
+    #' @param self experiment object
+    #' @param n_cores number of cores to use
+    #' @param parallel whether to evaluate run in parallel
+    #' @param cluster_eval_script path to script that instantiates necessary functions. this will often mean sourcing functions external to the package and loading dependencies for the model. needed if parallel = T
+    #' @param model_from_cluster_eval T if model is instantiated in the cluter eval scripts, F otherwise. Use T if using models that need compilation (like odin) and F otherwise.
+    #' @param ... additional parameters to be passed down to the `model$simulate()` function
+    #' @return results data.frame from all simulations in parallel
+    run = function(n_cores = 3, parallel = F, cluster_eval_script, model_from_cluster_eval = T, ...) {
+      R6Experiment_run(self = self, n_cores = n_cores, parallel = parallel, cluster_eval_script = cluster_eval_script, model_from_cluster_eval = model_from_cluster_eval, ...)
     }
   ),
 
