@@ -25,9 +25,7 @@
 #' This package implements the \code{\link{R6Sim}} and the \code{\link{R6Experiment}} R6 classes, providing an encapsulated object-oriented framework for simulation modeling studies.
 #'
 #'
-#' @docType package
-#' @name R6Sim.package
-NULL
+"_PACKAGE"
 
 
 

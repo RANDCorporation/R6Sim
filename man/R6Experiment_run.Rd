@@ -10,6 +10,7 @@ R6Experiment_run(
   parallel,
   cluster_eval_script,
   model_from_cluster_eval,
+  cluster_type = "PSOCK",
   ...
 )
 }
@@ -23,6 +24,8 @@ R6Experiment_run(
 \item{cluster_eval_script}{path to script that instantiates necessary functions. this will often mean sourcing functions external to the package and loading dependencies for the model. needed if parallel = T}
 
 \item{model_from_cluster_eval}{T if model is instantiated in the cluter eval scripts, F otherwise. Use T if using models that need compilation (like odin) and F otherwise.}
+
+\item{cluster_type}{either "FORK" or "PSOCK".}
 
 \item{...}{additional parameters to be passed to the model simulation function.}
 }

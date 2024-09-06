@@ -177,7 +177,7 @@ R6Experiment <- R6::R6Class(
     #' Runs R6Experiment in parallel
     #'
     #'
-    #' This function is most useful to simulate the posterior distribution for a single model in parallel in one machine. This function is not used when calibrating the model and not useful for parallelization across multiple nodes.
+    #' This function simulates the models included in the experiment, running one simulation for each row in the `policy_design` object. This function supporst local parallel execution, and assumes that each experimental variable in the `policy_design` data.frame is an input that can be set with the `model$set_input()` function.
     #'
     #' @param self experiment object
     #' @param n_cores number of cores to use
