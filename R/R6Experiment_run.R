@@ -36,11 +36,12 @@
 #' @param parallel whether to evaluate run in parallel
 #' @param cluster_eval_script path to script that instantiates necessary functions. this will often mean sourcing functions external to the package and loading dependencies for the model. needed if parallel = T
 #' @param model_from_cluster_eval T if model is instantiated in the cluter eval scripts, F otherwise. Use T if using models that need compilation (like odin) and F otherwise.
+#' @param cluster_type either "FORK" or "PSOCK".
 #' @param ... additional parameters to be passed to the model simulation function.
 #' @return results data.frame from all simulations in parallel
 #'
 #' @import parallel
-R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model_from_cluster_eval, ...) {
+R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model_from_cluster_eval, cluster_type = "PSOCK", ...) {
 
   # If we are running the experiment in parallel, we need to instantiate the models explicitly within each "node".
   # if the model is self-contained, that should be enough.
@@ -48,7 +49,7 @@ R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model
 
     # Make cluster and evaluate the cluster eval script.
     # With parallel
-    cl <- parallel::makeCluster(n_cores)
+    cl <- parallel::makeCluster(n_cores, type = cluster_type)
     parallel::clusterExport(cl, "cluster_eval_script", envir = environment())
     parallel::clusterEvalQ(cl, source(cluster_eval_script))
 
@@ -71,6 +72,8 @@ R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model
   # opts <- list(progress = progress)
 
   # foreach loop ------------------------------------------------------------
+
+  #browser()
 
   if (parallel) {
 
@@ -110,6 +113,9 @@ run_single_experiment <- function(policy_design_id, self, model_from_cluster_eva
 
   res <- model$simulate(...)
 
+
+  #browser()
+  # This cbind might be the issue, it might not be handling the policy design appropriately.
   return(cbind(self$policy_design[policy_design_id, ], res))
 
 }
