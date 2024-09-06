@@ -40,4 +40,5 @@ NULL
 #' @importFrom magrittr %>%
 #' @import dplyr
 #' @import tidyr
-utils::globalVariables(c(".", "where", "i"))
+utils::globalVariables(c(".", "where", "i", "cluster_experiment", "normalized_weights", "param_dist.df.id",
+                         "param_dist.df.name"))
