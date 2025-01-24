@@ -21,14 +21,16 @@ Mymodel <- R6::R6Class(
     simulate = function() {
 
       # Create a sample population with some health events:
-      self$sim_res <- data.frame(
+      sim_res <- data.frame(
         p.id = 1:self$inputs$pop.size,
         risk = rnorm(n = self$inputs$pop.size, mean = self$inputs$risk.mean, sd = self$inputs$risk.sd)
       ) %>%
         mutate(probability.event = 1 - exp(-risk)) %>%
-        mutate(n.events = rbinom(n = 1:self$inputs$pop.size, size = self$inputs$trials, prob = probability.event))
+        mutate(n.events = rbinom(n = 1:self$inputs$pop.size, size = self$inputs$trials, prob = probability.event)) %>%
+        group_by() %>%
+        summarise(n.events = sum(n.events))
 
-      invisible(self)
+      invisible(sim_res)
     }
   )
 )
@@ -115,10 +117,10 @@ test_that("set_posterior works with averages", {
 
 set.seed(1234)
 
-model$simulate()
+res <- model$simulate()
 
 test_that("simulate works", {
-  expect_equal(object = nrow(model$sim_res), expected = model$inputs$pop.size)
+  expect_equal(object = nrow(res), expected = 1)
 })
 
 
@@ -136,9 +138,9 @@ test_that("to_json and set_input_from_json work", {
 
 test_that("results from a json-converted model is identical to original model", {
   set.seed(1234)
-  new_model$simulate()
+  new_res <- new_model$simulate()
 
-  expect_identical(model$sim_res, new_model$sim_res)
+  expect_identical(res, new_res)
 })
 
 
@@ -200,6 +202,79 @@ test_that("R6Experiment works with pre-existing design", {
   experiment$set_design(grid_design_df = grid_design)
   expect_true(is.R6Experiment(experiment))
 })
+
+
+test_that("R6Experiment supports stochastic replications with seeds", {
+  experiment <- R6Experiment$new(model)
+
+  # Test with default n_reps=1 and set_seed=T
+  experiment$set_parameter(parameter_name = "Test1", experimental_design = "grid", values = c("A", "B"))
+  experiment$set_design(n_lhs = 2, )
+
+  # Check experiment has seed column
+  expect_true("seed" %in% names(experiment$policy_design))
+  expect_equal(length(unique(experiment$policy_design$rep.id)), 1)
+  expect_false(any(is.na(experiment$policy_design$seed)))
+
+  # Test with n_reps=3 and set_seed=T
+  experiment$set_design(n_lhs = 2, n_reps = 3)
+  expect_equal(length(unique(experiment$policy_design$rep.id)), 3)
+  expect_false(any(is.na(experiment$policy_design$seed)))
+  expect_equal(length(unique(experiment$policy_design$seed)), 3)
+
+  # Test with set_seed=F
+  experiment$set_design(n_lhs = 2, n_reps = 2, set_seed = F)
+  expect_true(all(is.na(experiment$policy_design$seed)))
+
+  # Test reproducibility with seeds
+  set.seed(123)
+  experiment$set_design(n_lhs = 2, n_reps = 2)
+  seeds1 <- experiment$policy_design$seed
+
+  set.seed(123)
+  experiment$set_design(n_lhs = 2, n_reps = 2)
+  seeds2 <- experiment$policy_design$seed
+
+  expect_equal(seeds1, seeds2)
+})
+
+test_that("run_single_experiment sets seeds correctly", {
+
+  experiment <- R6Experiment$new(model)
+
+  experiment$set_parameter(parameter_name = "Test1", experimental_design = "grid", values = c(1, 2))
+
+  experiment$set_design(n_reps = 2, set_seed = T)
+
+  # Get results with same policy_design_id but different seeds
+  res1 <- experiment$run()
+  res2 <- experiment$run()
+
+  # Same policy_design_id should give different results due to different seeds
+  expect_true(identical(res1, res2))
+
+  # Same policy_design_id and seed should give identical results
+  experiment$set_design(n_reps = 2, set_seed = F)
+  res3 <- experiment$run()
+
+  expect_false(identical(res1, res3))
+})
+
+test_that("R6Experiment runs parallel with replications", {
+  testthat::skip_on_ci()
+
+  experiment <- R6Experiment$new(model)
+
+  experiment$set_parameter(parameter_name = "Test1", experimental_design = "grid", values = c(1, 2))
+  experiment$set_design(n_reps = 3)
+
+  results <- experiment$run(n_cores = 2, parallel = TRUE, packages = "dplyr")
+
+  expect_equal(length(unique(results$rep.id)), 3)
+  expect_equal(nrow(results), nrow(experiment$policy_design))
+  expect_true(all(c("rep.id", "seed") %in% names(results)))
+})
+
 
 
 # complete tests that involve writing the experiment to disk:

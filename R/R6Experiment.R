@@ -62,6 +62,9 @@ R6Experiment <- R6::R6Class(
     #' @field policy_design is a data.frame containing one row per policy experiment.
     policy_design = NULL,
 
+    #' @field set_seed is a T if the experiment will be controlling and setting seeds.
+    set_seed = T,
+
     #' @field experimental_parameters is a list containing details about each experimental parameter. Experimental parameters can be either policy levers or uncertainties. Defining this distinction is up to the user.
     experimental_parameters = list(),
 
@@ -96,15 +99,17 @@ R6Experiment <- R6::R6Class(
     #' @details
     #' Creates two data.frames that represent the experimental design" the `exp_design` for natural history experiments and the `policy_design` for policy experiments. These experimental designs are created based on the parameters defined by the set_parameter functions. The experimental design created by this function is useful to run a typical RDM analysis where each policy is evaluated across a LHS of deep uncertainties. To achieve that, define each policy lever as a grid parameter, and each uncertainty as an "lhs" uncertainty. Natural history uncertainties are often already defined in the model's posterior file and are also considered.
     #' The natural history design will have `n_posterior` runs for each model in the experimental design.
-    #' The policy experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` \* `n_posterior` for each model in the experimental design.
+    #' The policy experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` \* `n_posterior` \* `n_reps` for each model in the experimental design.
     #'
     #' @param n_lhs The number of points in the Latin Hypercube Sample to be created.
     #' @param blocks is the number of population blocks to use to parallelize the runs across nodes.
     #' @param grid_design_df a data.frame containing a pre-existing experimental design to be used. This function will use this experimental design in lieu of parameters defined in the grid, so this effectively replaces any set of parameters that are part of a grid design.
     #' @param convert_lhs_to_grid Default is FALSE. If TRUE, this function convert the LHS parameters to "grid" parameters. This is useful when one needs to test the "corners" of the experimental design before performing a full LHS run.
     #' @param lhs_to_grid_midpoints Only relevant when convert_to_lhs = T. Default value is 0. This should be an integer determining how many points within the grid hypercube should be created for the parameters being converted from LHS to a GRID design. For example, if convert_lhs_to_grid = T and lhs_to_grid_midpoints = 0, this function will create a full factorial design of the LHS parameters with 2^n points. If one wants to use one midpoint, then the design will have 3^n points, and so on. This parameter does not affect parameters orignally defined as part of a grid design because their values have already been set.
-    set_design = function(n_lhs, blocks = 1, grid_design_df, convert_lhs_to_grid = F, lhs_to_grid_midpoints = 0) {
-      R6Experiment_set_design(self = self, n_lhs = n_lhs, blocks = blocks, grid_design_df = grid_design_df, convert_lhs_to_grid = convert_lhs_to_grid, lhs_to_grid_midpoints = lhs_to_grid_midpoints)
+    #' @param n_reps Number of stochastic replications for each experimental design point. Default is 1.
+    #' @param set_seed Whether to set random seeds for reproducibility. If TRUE, generates unique seeds for each replication. Default is TRUE.
+    set_design = function(n_lhs, blocks = 1, grid_design_df, convert_lhs_to_grid = F, lhs_to_grid_midpoints = 0, n_reps = 1, set_seed = T) {
+      R6Experiment_set_design(self = self, n_lhs = n_lhs, blocks = blocks, grid_design_df = grid_design_df, convert_lhs_to_grid = convert_lhs_to_grid, lhs_to_grid_midpoints = lhs_to_grid_midpoints, n_reps = n_reps, set_seed = set_seed)
     },
 
     #' @description
@@ -174,22 +179,27 @@ R6Experiment <- R6::R6Class(
       }
     },
 
-    #' Runs R6Experiment in parallel
+    #' @description
+    #' Run Experiment
     #'
-    #'
-    #' This function simulates the models included in the experiment, running one simulation for each row in the `policy_design` object. This function supporst local parallel execution, and assumes that each experimental variable in the `policy_design` data.frame is an input that can be set with the `model$set_input()` function.
-    #'
-    #' @param self experiment object
     #' @param n_cores number of cores to use
     #' @param parallel whether to evaluate run in parallel
-    #' @param cluster_eval_script path to script that instantiates necessary functions. this will often mean sourcing functions external to the package and loading dependencies for the model. needed if parallel = T
-    #' @param model_from_cluster_eval T if model is instantiated in the cluter eval scripts, F otherwise. Use T if using models that need compilation (like odin) and F otherwise.
-    #' @param ... additional parameters to be passed down to the `model$simulate()` function
-    #' @return results data.frame from all simulations in parallel
-    run = function(n_cores = 3, parallel = F, cluster_eval_script, model_from_cluster_eval = T, ...) {
-      R6Experiment_run(self = self, n_cores = n_cores, parallel = parallel, cluster_eval_script = cluster_eval_script, model_from_cluster_eval = model_from_cluster_eval, ...)
-    }
-  ),
+    #' @param cluster_eval_script Optional path to R script that is sourced once in each parallel process before running experiments.
+    #'        Useful for model setup that should happen once per process, like:
+    #'        - Loading required packages
+    #'        - Compiling models (e.g. odin models)
+    #'        - Setting up simulation parameters/data
+    #'        - Creating model instances for use across runs
+    #' @param model_from_cluster_eval If TRUE, expects model instances to be created in cluster_eval_script.
+    #'        Set TRUE when model compilation is needed (like with odin).
+    #' @param packages character vector of packages to be loaded before running the model in parallel.
+    #' @param ... additional parameters passed to model simulation
+    run = function(n_cores = 3, parallel = F, cluster_eval_script = NULL,
+                   model_from_cluster_eval = F, packages = NULL, ...) {
+      R6Experiment_run(self = self, n_cores = n_cores, parallel = parallel,
+                       cluster_eval_script = cluster_eval_script,
+                       model_from_cluster_eval = model_from_cluster_eval, packages = packages, ...)
+    }),
 
   # Use private to hold data that will not be accessed by the user directly.
   private = list(

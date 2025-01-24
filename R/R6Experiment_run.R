@@ -37,54 +37,45 @@
 #' @param cluster_eval_script path to script that instantiates necessary functions. this will often mean sourcing functions external to the package and loading dependencies for the model. needed if parallel = T
 #' @param model_from_cluster_eval T if model is instantiated in the cluter eval scripts, F otherwise. Use T if using models that need compilation (like odin) and F otherwise.
 #' @param cluster_type either "FORK" or "PSOCK".
+#' @param packages character vector of packages to be loaded before running the model in paralle.
 #' @param ... additional parameters to be passed to the model simulation function.
 #' @return results data.frame from all simulations in parallel
 #'
 #' @import parallel
-R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model_from_cluster_eval, cluster_type = "PSOCK", ...) {
+R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script = NULL,
+                             model_from_cluster_eval, cluster_type = "PSOCK",
+                             packages = NULL, ...) {
 
-  # If we are running the experiment in parallel, we need to instantiate the models explicitly within each "node".
-  # if the model is self-contained, that should be enough.
   if (parallel) {
-
-    # Make cluster and evaluate the cluster eval script.
-    # With parallel
     cl <- parallel::makeCluster(n_cores, type = cluster_type)
-    parallel::clusterExport(cl, "cluster_eval_script", envir = environment())
-    parallel::clusterEvalQ(cl, source(cluster_eval_script))
 
-  }
+    # Load packages if specified
+    if (!is.null(packages)) {
+      parallel::clusterExport(cl, "packages", envir = environment())
+      parallel::clusterEvalQ(cl, {
+        for (pkg in packages) {
+          library(pkg, character.only = TRUE)
+        }
+      })
+    }
 
-  # progress bar ------------------------------------------------------------
+    if (!is.null(cluster_eval_script)) {
+      parallel::clusterExport(cl, "cluster_eval_script", envir = environment())
+      parallel::clusterEvalQ(cl, source(cluster_eval_script))
+    }
 
-  # Progress bar is commented out due to licensing issues with foreach.
-  # Should these issues be resolved, it should be easy to bring it back in.
-
-  # Progress bar setup adapted from:
-  # https://stackoverflow.com/questions/5423760/how-do-you-create-a-progress-bar-when-using-the-foreach-function-in-r
-  # pb <- progress_bar$new(
-  #   format = "R6Sim: experiment = :experiment [:bar] :elapsed | eta: :eta",
-  #   total = nrow(self$policy_design), # 100
-  #   width = 80
-  # )
-
-  # allowing progress bar to be used in foreach -----------------------------
-  # progress <- function(n) {
-  #   pb$tick(tokens = list(experiment = n))
-  # }
-
-  # opts <- list(progress = progress)
-
-  # foreach loop ------------------------------------------------------------
-
-  if (parallel) {
-
-    # Using parLapply and not foreach due to licensing issues.
-    results <- parLapply(cl = cl, X = 1:nrow(self$policy_design), fun = run_single_experiment, model_from_cluster_eval = model_from_cluster_eval, self = self, parallel = parallel, ...)
+    results <- parLapply(cl = cl, X = 1:nrow(self$policy_design),
+                         fun = run_single_experiment,
+                         model_from_cluster_eval = model_from_cluster_eval,
+                         self = self, parallel = parallel, ...)
 
     parallel::stopCluster(cl)
+
   } else {
-    results <- lapply(X = 1:nrow(self$policy_design), FUN = run_single_experiment, model_from_cluster_eval = model_from_cluster_eval, self = self, parallel = parallel, ...)
+    results <- lapply(X = 1:nrow(self$policy_design),
+                      FUN = run_single_experiment,
+                      model_from_cluster_eval = model_from_cluster_eval,
+                      self = self, parallel = parallel, ...)
   }
 
   return(do.call(rbind, results))
@@ -113,7 +104,12 @@ run_single_experiment <- function(policy_design_id, self, model_from_cluster_eva
     model$set_input(var, scenario_inputs[, var])
   }
 
-  res <- model$simulate(...)
+  # If setting seed, do it
+  if(self$set_seed) {
+    set.seed(scenario_inputs$seed)
+  }
+
+  res <- model$simulate(...) %>% as.data.frame()
 
   return(cbind(self$policy_design[policy_design_id, ], res))
 

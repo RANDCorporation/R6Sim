@@ -34,14 +34,25 @@
 #' @import dplyr
 #' @importFrom stats qunif
 #' @importFrom data.table as.data.table data.table
-R6Experiment_set_design <- function(self, n_lhs, blocks, grid_design_df, convert_lhs_to_grid, lhs_to_grid_midpoints) {
+R6Experiment_set_design <- function(self, n_lhs, blocks, grid_design_df, convert_lhs_to_grid = F,
+                                    lhs_to_grid_midpoints = 0, n_reps = 1, set_seed = T) {
+  # Save set_seed parameter for use in run_single_experiment
+  self$set_seed <- set_seed
+
+  # Create replicates data.frame
+  replicates <- data.frame(rep.id = 1:n_reps)
+  if(set_seed) {
+    # Generate reproducible vector of seeds using sample.int
+    replicates$seed <- sample.int(1e9, size = n_reps, replace = FALSE)
+  } else {
+    replicates$seed <- NA_integer_
+  }
 
   # convert LHS parameters to grid if requested:
   if (convert_lhs_to_grid) {
     # Convert all lhs parameters to grid
     self$experimental_parameters <- lapply(X = self$experimental_parameters, FUN = convert_lhs_param_to_grid, lhs_to_grid_midpoints = lhs_to_grid_midpoints)
   }
-
 
   ## Getting a Data.Frame of LHS Parameters
   lhs_params <- do.call(rbind.data.frame, Filter(f = function(a) a$experimental_design == "lhs", self$experimental_parameters))
@@ -50,10 +61,8 @@ R6Experiment_set_design <- function(self, n_lhs, blocks, grid_design_df, convert
     sapply(., function(a) a[3]) %>%
     expand.grid(.)
 
-
   # Only sample lhs if there is one LHS variable:
   if (nrow(lhs_params) > 0) {
-
     # Obtan an LHS sample with the lhs::randomLHS sample.
     lhs_sample <- lhs::randomLHS(n = n_lhs, k = nrow(lhs_params)) %>%
       as.data.frame()
@@ -71,7 +80,6 @@ R6Experiment_set_design <- function(self, n_lhs, blocks, grid_design_df, convert
       as.data.frame(.) %>%
       mutate(lhs.id = row_number())
   } else if (nrow(grid_lhs_params) > 0) {
-
     # create grid with "Lhs parameters", but using a grid desing. Useful to distinguish uncertainties from policies:
     lhs_experiments <- grid_lhs_params %>%
       mutate(lhs.id = row_number())
@@ -82,12 +90,10 @@ R6Experiment_set_design <- function(self, n_lhs, blocks, grid_design_df, convert
     lhs_experiments <- data.frame(lhs.id = 1)
   }
 
-
   ## Getting a Data.Frame of Grid Parameters:
   # use the grid_design_df if this data.frame was provided
   if (!missing(grid_design_df)) {
     grid_params <- as.data.frame(grid_design_df)
-
     # if grid_design_df was not provided, then
   } else {
     grid_params <- Filter(f = function(a) a$experimental_design == "grid", self$experimental_parameters) %>%
@@ -105,7 +111,6 @@ R6Experiment_set_design <- function(self, n_lhs, blocks, grid_design_df, convert
 
   # Getting Rid of the .values appendix
   names(grid_params) <- sub(pattern = ".values", replacement = "", x = names(grid_params))
-
 
   # Obtaining a table for models and their parameters in the params:
   models_df <- data.frame(model.name = sapply(self$models, "[[", "name")) %>%
@@ -125,20 +130,22 @@ R6Experiment_set_design <- function(self, n_lhs, blocks, grid_design_df, convert
 
   # params Experimental Design:
   # The params experimental design defines the design to be run including only variation in the params distribution of the model.
-
   params_design <- all_models_params %>%
     dplyr::mutate(params_design.id = row_number())
 
   # Policy Experimental Design:
   # The Policy design is the combination of all experimental parameters:
-  policy_design <- expand.grid(grid_params$grid.id, lhs_experiments$lhs.id, params_design$params_design.id)
-  names(policy_design) <- c("grid.id", "lhs.id", "params_design.id")
+  policy_design <- expand.grid(grid_params$grid.id, lhs_experiments$lhs.id,
+                               params_design$params_design.id, replicates$rep.id)
+  names(policy_design) <- c("grid.id", "lhs.id", "params_design.id", "rep.id")
 
   policy_design <- policy_design %>%
-    dplyr::left_join(params_design, by = "params_design.id")
+    dplyr::left_join(params_design, by = "params_design.id") %>%
+    dplyr::left_join(replicates, by = "rep.id")
 
   # Assert that the Names of Alternative tables don't collide.
-  all_collumns <- c(names(params_design), names(lhs_experiments), names(grid_params), "block.id")
+  all_collumns <- c(names(params_design), names(lhs_experiments),
+                    names(grid_params), "block.id", "rep.id", "seed")
 
   duplicated_names <- all_collumns[duplicated(all_collumns)]
   assertthat::assert_that(
@@ -161,10 +168,8 @@ R6Experiment_set_design <- function(self, n_lhs, blocks, grid_design_df, convert
     mutate(policy.exp.id = row_number())
 
   # Save Experimental Design as a data.tables and json objects:
-
   # For the Natural history design:
   self$params_design <- data.table::as.data.table(params_design)
-
   # For the policy design
   self$policy_design <- data.table::as.data.table(policy_design)
 
