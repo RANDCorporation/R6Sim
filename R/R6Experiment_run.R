@@ -56,6 +56,10 @@ R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model
   }
 
   # progress bar ------------------------------------------------------------
+
+  # Progress bar is commented out due to licensing issues with foreach.
+  # Should these issues be resolved, it should be easy to bring it back in.
+
   # Progress bar setup adapted from:
   # https://stackoverflow.com/questions/5423760/how-do-you-create-a-progress-bar-when-using-the-foreach-function-in-r
   # pb <- progress_bar$new(
@@ -72,8 +76,6 @@ R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script, model
   # opts <- list(progress = progress)
 
   # foreach loop ------------------------------------------------------------
-
-  #browser()
 
   if (parallel) {
 
@@ -113,9 +115,6 @@ run_single_experiment <- function(policy_design_id, self, model_from_cluster_eva
 
   res <- model$simulate(...)
 
-
-  #browser()
-  # This cbind might be the issue, it might not be handling the policy design appropriately.
   return(cbind(self$policy_design[policy_design_id, ], res))
 
 }

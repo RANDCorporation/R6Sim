@@ -1,7 +1,7 @@
 Type: Package
 Package: R6Sim
 Title: R6-based Simulation Modeling Toolkit
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: 
     person("Pedro", "Nascimento de Lima", , "plima@rand.org", role = c("cre", "aut"),
            comment = c(ORCID = "0000-0001-9057-198X"))
