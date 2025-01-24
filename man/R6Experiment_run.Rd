@@ -8,9 +8,10 @@ R6Experiment_run(
   self,
   n_cores,
   parallel,
-  cluster_eval_script,
+  cluster_eval_script = NULL,
   model_from_cluster_eval,
   cluster_type = "PSOCK",
+  packages = NULL,
   ...
 )
 }
@@ -26,6 +27,8 @@ R6Experiment_run(
 \item{model_from_cluster_eval}{T if model is instantiated in the cluter eval scripts, F otherwise. Use T if using models that need compilation (like odin) and F otherwise.}
 
 \item{cluster_type}{either "FORK" or "PSOCK".}
+
+\item{packages}{character vector of packages to be loaded before running the model in paralle.}
 
 \item{...}{additional parameters to be passed to the model simulation function.}
 }

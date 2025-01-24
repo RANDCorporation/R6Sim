@@ -25,6 +25,8 @@ This class implements a `R6Experiment`.
 
 \item{\code{policy_design}}{is a data.frame containing one row per policy experiment.}
 
+\item{\code{set_seed}}{is a T if the experiment will be controlling and setting seeds.}
+
 \item{\code{experimental_parameters}}{is a list containing details about each experimental parameter. Experimental parameters can be either policy levers or uncertainties. Defining this distinction is up to the user.}
 }
 \if{html}{\out{</div>}}
@@ -108,7 +110,9 @@ Set Experimental Design
   blocks = 1,
   grid_design_df,
   convert_lhs_to_grid = F,
-  lhs_to_grid_midpoints = 0
+  lhs_to_grid_midpoints = 0,
+  n_reps = 1,
+  set_seed = T
 )}\if{html}{\out{</div>}}
 }
 
@@ -124,13 +128,17 @@ Set Experimental Design
 \item{\code{convert_lhs_to_grid}}{Default is FALSE. If TRUE, this function convert the LHS parameters to "grid" parameters. This is useful when one needs to test the "corners" of the experimental design before performing a full LHS run.}
 
 \item{\code{lhs_to_grid_midpoints}}{Only relevant when convert_to_lhs = T. Default value is 0. This should be an integer determining how many points within the grid hypercube should be created for the parameters being converted from LHS to a GRID design. For example, if convert_lhs_to_grid = T and lhs_to_grid_midpoints = 0, this function will create a full factorial design of the LHS parameters with 2^n points. If one wants to use one midpoint, then the design will have 3^n points, and so on. This parameter does not affect parameters orignally defined as part of a grid design because their values have already been set.}
+
+\item{\code{n_reps}}{Number of stochastic replications for each experimental design point. Default is 1.}
+
+\item{\code{set_seed}}{Whether to set random seeds for reproducibility. If TRUE, generates unique seeds for each replication. Default is TRUE.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
 Creates two data.frames that represent the experimental design" the `exp_design` for natural history experiments and the `policy_design` for policy experiments. These experimental designs are created based on the parameters defined by the set_parameter functions. The experimental design created by this function is useful to run a typical RDM analysis where each policy is evaluated across a LHS of deep uncertainties. To achieve that, define each policy lever as a grid parameter, and each uncertainty as an "lhs" uncertainty. Natural history uncertainties are often already defined in the model's posterior file and are also considered.
 The natural history design will have `n_posterior` runs for each model in the experimental design.
-The policy experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` \* `n_posterior` for each model in the experimental design.
+The policy experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` \* `n_posterior` \* `n_reps` for each model in the experimental design.
 }
 
 }
@@ -150,11 +158,7 @@ Write Experimental design to disk
 
 \item{\code{write_inputs}}{if TRUE (default), writes model inputs to json. Might be unnecessary when inputs are set in the model run script.}
 
-\item{\code{format}}{"json" or "csv". the natural history design must be written to json, whereas the policy design can be written to json or csv.
-Runs R6Experiment in parallel
-
-
-This function is most useful to simulate the posterior distribution for a single model in parallel in one machine. This function is not used when calibrating the model and not useful for parallelization across multiple nodes.}
+\item{\code{format}}{"json" or "csv". the natural history design must be written to json, whereas the policy design can be written to json or csv.}
 }
 \if{html}{\out{</div>}}
 }
@@ -167,12 +171,14 @@ Creates a data.frame in which each row represents a single experiment. The json 
 \if{html}{\out{<a id="method-R6Experiment-run"></a>}}
 \if{latex}{\out{\hypertarget{method-R6Experiment-run}{}}}
 \subsection{Method \code{run()}}{
+Run Experiment
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run(
   n_cores = 3,
   parallel = F,
-  cluster_eval_script,
-  model_from_cluster_eval = T,
+  cluster_eval_script = NULL,
+  model_from_cluster_eval = F,
+  packages = NULL,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -184,18 +190,21 @@ Creates a data.frame in which each row represents a single experiment. The json 
 
 \item{\code{parallel}}{whether to evaluate run in parallel}
 
-\item{\code{cluster_eval_script}}{path to script that instantiates necessary functions. this will often mean sourcing functions external to the package and loading dependencies for the model. needed if parallel = T}
+\item{\code{cluster_eval_script}}{Optional path to R script that is sourced once in each parallel process before running experiments.
+Useful for model setup that should happen once per process, like:
+- Loading required packages
+- Compiling models (e.g. odin models)
+- Setting up simulation parameters/data
+- Creating model instances for use across runs}
 
-\item{\code{model_from_cluster_eval}}{T if model is instantiated in the cluter eval scripts, F otherwise. Use T if using models that need compilation (like odin) and F otherwise.}
+\item{\code{model_from_cluster_eval}}{If TRUE, expects model instances to be created in cluster_eval_script.
+Set TRUE when model compilation is needed (like with odin).}
 
-\item{\code{...}}{additional parameters to be passed down to the `model$simulate()` function}
+\item{\code{packages}}{character vector of packages to be loaded before running the model in parallel.}
 
-\item{\code{self}}{experiment object}
+\item{\code{...}}{additional parameters passed to model simulation}
 }
 \if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-results data.frame from all simulations in parallel
 }
 }
 \if{html}{\out{<hr>}}
