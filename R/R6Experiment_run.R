@@ -78,7 +78,7 @@ R6Experiment_run <- function(self, n_cores, parallel, cluster_eval_script = NULL
                       self = self, parallel = parallel, ...)
   }
 
-  return(do.call(rbind, results))
+  return(do.call(dplyr::bind_rows, results))
 }
 
 run_single_experiment <- function(policy_design_id, self, model_from_cluster_eval, parallel, ...) {
@@ -111,7 +111,7 @@ run_single_experiment <- function(policy_design_id, self, model_from_cluster_eva
 
   res <- model$simulate(...) %>% as.data.frame()
 
-  return(cbind(self$policy_design[policy_design_id, ], res))
+  return(dplyr::bind_cols(self$policy_design[policy_design_id, ], res))
 
 }
 
