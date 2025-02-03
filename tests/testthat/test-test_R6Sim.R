@@ -418,33 +418,69 @@ test_that("R6Experiment works with all models having parameter distributions", {
 
 
 
+# Test writing experiments to disk ----------------------------------------
 
+# Implement tests when this is implemented in the package:
 
-
-# complete tests that involve writing the experiment to disk:
+# test_that("write_design works with CSV format", {
+#   # Setup test experiment
+#   model <- Mymodel$new(name = "test")
+#   experiment <- R6Experiment$new(model)
+#   experiment$set_parameter(parameter_name = "Test1", experimental_design = "grid", values = c("A", "B"))
+#   experiment$set_design(n_lhs = 2)
 #
-# test_that("to_JSON returns a list with the experiment", {
-#   json_exp = experiment$write_design()
-#   expect_true(length(json_exp) == 2)
+#   # Create temp directory
+#   temp_dir <- file.path(tempdir(), "R6Sim-test")
+#   dir.create(temp_dir, showWarnings = FALSE, recursive = TRUE)
+#
+#   # Test CSV write
+#   experiment$write_design(path = temp_dir, format = "csv")
+#   expect_true(file.exists(file.path(temp_dir, "exp_design.txt")))
+#   expect_true(file.exists(file.path(temp_dir, "exp_design_col_names.txt")))
+#
+#   # Cleanup
+#   if (dir.exists(temp_dir)) {
+#     unlink(temp_dir, recursive = TRUE)
+#   }
+# })
+
+# test_that("write_design works with temp directory", {
+#   # Setup test experiment
+#   model <- Mymodel$new(name = "test")
+#   experiment <- R6Experiment$new(model)
+#   experiment$set_parameter(parameter_name = "Test1", experimental_design = "grid", values = c("A", "B"))
+#   experiment$set_design(n_lhs = 2)
+#
+#   # Create temp directory that works cross-platform
+#   temp_dir <- file.path(tempdir(), "R6Sim-test")
+#   dir.create(temp_dir, showWarnings = FALSE, recursive = TRUE)
+#
+#   # Test JSON write
+#   experiment$write_design(path = temp_dir, format = "json")
+#   expect_true(file.exists(file.path(temp_dir, "exp_design.txt")))
+#
+#   # Test CSV write
+#   experiment$write_design(path = temp_dir, format = "csv")
+#   expect_true(file.exists(file.path(temp_dir, "exp_design.txt")))
+#   expect_true(file.exists(file.path(temp_dir, "exp_design_col_names.txt")))
+#
+#   # Cleanup
+#   if (dir.exists(temp_dir)) {
+#     unlink(temp_dir, recursive = TRUE)
+#   }
 # })
 #
-# test_that("write_design can write to a file", {
-#   experiment$write_design(path = "./json-test")
+# test_that("write_design returns experimental design when no path provided", {
+#   # Setup
+#   model <- Mymodel$new(name = "test")
+#   experiment <- R6Experiment$new(model)
+#   experiment$set_parameter(parameter_name = "Test1", experimental_design = "grid", values = c("A", "B"))
+#   experiment$set_design(n_lhs = 2)
 #
-#   expect_true(file.exists("./json-test/policy_design.txt"))
-#   expect_true(file.exists("./json-test/nh_design.txt"))
-#   file.remove("./json-test/policy_design.txt")
-#   file.remove("./json-test/nh_design.txt")
-#   file.remove("./json-test/")
+#   # Test return value when no path provided
+#   result <- experiment$write_design(format = "json")
+#   expect_type(result, "character")
+#   expect_gt(length(result), 0)
 # })
-#
-# test_that("write_design also can write to csv", {
-#   experiment$write_design(path = "./json-test", design = "policy", format = "csv")
-#   expect_true(file.exists("./json-test/policy_design.txt"))
-#   expect_true(file.exists("./json-test/policy_design_col_names.txt"))
-#   file.remove("./json-test/policy_design.txt")
-#   file.remove("./json-test/policy_design_col_names.txt")
-#   file.remove("./json-test/")
-# })
-#
-#
+
+

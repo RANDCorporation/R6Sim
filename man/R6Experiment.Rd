@@ -37,7 +37,6 @@ This class implements a `R6Experiment`.
 \item \href{#method-R6Experiment-new}{\code{R6Experiment$new()}}
 \item \href{#method-R6Experiment-set_parameter}{\code{R6Experiment$set_parameter()}}
 \item \href{#method-R6Experiment-set_design}{\code{R6Experiment$set_design()}}
-\item \href{#method-R6Experiment-write_design}{\code{R6Experiment$write_design()}}
 \item \href{#method-R6Experiment-run}{\code{R6Experiment$run()}}
 \item \href{#method-R6Experiment-clone}{\code{R6Experiment$clone()}}
 }
@@ -131,7 +130,73 @@ Set Experimental Design
 
 \item{\code{n_reps}}{Number of stochastic replications for each experimental design point. Default is 1.}
 
-\item{\code{set_seed}}{Whether to set random seeds for reproducibility. If TRUE, generates unique seeds for each replication. Default is TRUE.}
+\item{\code{set_seed}}{Whether to set random seeds for reproducibility. If TRUE, generates unique seeds for each replication. Default is TRUE.
+#' @description
+#' Write Experimental design to disk
+#'
+#' @details
+#' Creates a data.frame in which each row represents a single experiment. The json object included in each row contains all information that the models need to re-create themselves in the server-side in a HPC workflow.
+#'
+#' @param path folder where json experimental designs should be saved. Do not specify a file name. If missing, the function will return the design specified below.
+#' @param write_inputs if TRUE (default), writes model inputs to json. Might be unnecessary when inputs are set in the model run script.
+#' @param format "json" or "csv". the natural history design must be written to json, whereas the policy design can be written to json or csv.
+write_design = function(path, write_inputs = T, format = c("json", "csv")) {
+
+  # Checking arguments, selecting defaults:
+  format <- match.arg(format)
+
+  dir.create(path, showWarnings = F)
+
+  file_name <- paste0(path, "/exp_design.txt")
+
+  if (format == "json") {
+    json_exp_design <- R6Experiment_to_json(
+      self = self,
+      experimental_design = self$exp_design,
+      write_inputs = write_inputs
+    )
+
+    message(paste0(
+      "Writing Experimental Design JSON File with ",
+      nrow(json_exp_design), " json rows."
+    ))
+
+    write.table(
+      x = json_exp_design,
+      file = file_name,
+      row.names = F, col.names = F, quote = F
+    )
+  }
+
+  if (format == "csv") {
+    csv_exp_design <- R6Experiment_to_csv(
+      self = self,
+      experimental_design = self$exp_design,
+      write_inputs = write_inputs
+    ) %>%
+      mutate(across(where(is.logical), .fns = ~ as.numeric(.x)))
+
+    message(paste0(
+      "Writing Experimental Design CSV File with ",
+      nrow(csv_exp_design),
+      " rows."
+    ))
+
+    # Write file:
+    write.table(
+      x = csv_exp_design,
+      file = file_name,
+      row.names = F, col.names = F, append = F, sep = ","
+    )
+
+    # Write column names:
+    write.table(
+      x = names(csv_exp_design),
+      file = paste0(path, "/exp_design_col_names.txt"),
+      row.names = F, col.names = F, append = F, sep = ","
+    )
+  }
+},}
 }
 \if{html}{\out{</div>}}
 }
@@ -139,31 +204,6 @@ Set Experimental Design
 Creates two data.frames that represent the experimental design" the `exp_design` for natural history experiments and the `policy_design` for policy experiments. These experimental designs are created based on the parameters defined by the set_parameter functions. The experimental design created by this function is useful to run a typical RDM analysis where each policy is evaluated across a LHS of deep uncertainties. To achieve that, define each policy lever as a grid parameter, and each uncertainty as an "lhs" uncertainty. Natural history uncertainties are often already defined in the model's posterior file and are also considered.
 The natural history design will have `n_posterior` runs for each model in the experimental design.
 The policy experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` \* `n_posterior` \* `n_reps` for each model in the experimental design.
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-R6Experiment-write_design"></a>}}
-\if{latex}{\out{\hypertarget{method-R6Experiment-write_design}{}}}
-\subsection{Method \code{write_design()}}{
-Write Experimental design to disk
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$write_design(path, write_inputs = T, format = c("json", "csv"))}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{path}}{folder where json experimental designs should be saved. Do not specify a file name. If missing, the function will return the design specified below.}
-
-\item{\code{write_inputs}}{if TRUE (default), writes model inputs to json. Might be unnecessary when inputs are set in the model run script.}
-
-\item{\code{format}}{"json" or "csv". the natural history design must be written to json, whereas the policy design can be written to json or csv.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Details}{
-Creates a data.frame in which each row represents a single experiment. The json object included in each row contains all information that the models need to re-create themselves in the server-side in a HPC workflow.
 }
 
 }

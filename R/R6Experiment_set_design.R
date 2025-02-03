@@ -172,6 +172,8 @@ R6Experiment_set_design <- function(self, n_lhs, blocks, grid_design_df, convert
                     names(grid_params), "block.id", "rep.id", "seed")
 
   duplicated_names <- all_collumns[duplicated(all_collumns)]
+
+  # Ensure no duplicated param names
   assertthat::assert_that(
     {
       length(duplicated_names) == 0

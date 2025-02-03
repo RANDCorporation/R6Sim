@@ -19,7 +19,6 @@ Imports:
     purrr,
     R6,
     readxl,
-    writexl,
     stats,
     tidyr,
     utils,
@@ -27,7 +26,8 @@ Imports:
 Suggests: 
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    writexl
 VignetteBuilder: 
     knitr
 Config/testthat/edition: 3
