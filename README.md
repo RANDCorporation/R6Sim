@@ -6,6 +6,8 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/RANDCorporation/R6Sim/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/RANDCorporation/R6Sim/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/RANDCorporation/R6Sim/graph/badge.svg)](https://app.codecov.io/gh/RANDCorporation/R6Sim)
 <!-- badges: end -->
 
 `R6Sim` provides an `R6` base class for simulation modeling analyses
