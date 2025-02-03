@@ -7,6 +7,13 @@
 \description{
 This package implements the \code{\link{R6Sim}} and the \code{\link{R6Experiment}} R6 classes, providing an encapsulated object-oriented framework for simulation modeling studies.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://randcorporation.github.io/R6Sim/}
+}
+
+}
 \author{
 \strong{Maintainer}: Pedro Nascimento de Lima \email{plima@rand.org} (\href{https://orcid.org/0000-0001-9057-198X}{ORCID})
 

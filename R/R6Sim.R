@@ -29,12 +29,42 @@
 # Creation Date: August 2022
 #------------------------------------------------------------------------------#
 
-#' R6 Class Representing an `R6Sim` model
+#' R6 Class for a Simulation Model
 #'
 #' @description
-#' This class implements an `R6Sim` model
+#' Base class for building simulation models with R6. Provides methods for managing inputs,
+#' parameters, and simulation execution.
 #'
-#' @import R6
+#' @details
+#' The R6Sim class includes functionality for:
+#' * Input and parameter management
+#' * JSON serialization
+#' * Parallel execution
+#' * Parameter sampling
+#'
+#' @examples
+#' # Create simulation model
+#' MyModel <- R6::R6Class(
+#'   "MyModel",
+#'   inherit = R6Sim,
+#'   public = list(
+#'     initialize = function(name) {
+#'       super$initialize(name)
+#'       self$set_input("population", 1000)
+#'       self$set_input("growth_rate", 0.05)
+#'     },
+#'     simulate = function(...) {
+#'       pop <- self$inputs$population
+#'       growth <- self$inputs$growth_rate
+#'       results <- pop * (1 + growth)^(1:10)
+#'       return(data.frame(year = 1:10, population = results))
+#'     }
+#'   )
+#' )
+#'
+#' model <- MyModel$new("pop_model")
+#' results <- model$simulate()
+#'
 #' @export
 R6Sim <- R6::R6Class(
 
@@ -76,14 +106,21 @@ R6Sim <- R6::R6Class(
     #' @description
     #' Set Input
     #'
-    #' @details
-    #' Use this function to add a new input to a R6Sim object.
-    #' Model inputs should be added or modified through this function. Inputs can be vectors or lists of strings, numeric or integers, to guarantee that they can be translated to and from JSON without any issues.
+    #' @param name Character string defining the input name
+    #' @param value Input value. Can be a single value, list or vector.
+    #' @param type Optional character string defining input type.
     #'
-    #' @param name character string defining the input name
-    #' @param value input value. Can be a single value, a list or a vector.
-    #' @param description sentence describing the meaning of this input.
-    #' @param type optional character string defining the type of input. Useful when one wants to only write inputs of a certain type to json.
+    #' @details
+    #' Validates input types and maintains input registry.
+    #' Accepts numeric, character, logical, data.frame and list inputs.
+    #' Type tags enable selective JSON export.
+    #'
+    #' @examples
+    #' model$set_input("population", 1000, type = "parameter")
+    #' model$set_input("growth_rates", c(0.01, 0.02), type = "scenario")
+    #' model$set_input("settings", list(iterations = 100), type = "config")
+    #'
+    #' @export
     set_input = function(name, value, type = NA_character_) {
       R6Sim_set_input(self = self, name = name, value = value, type = type)
     },

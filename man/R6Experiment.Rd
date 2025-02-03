@@ -2,9 +2,20 @@
 % Please edit documentation in R/R6Experiment.R
 \name{R6Experiment}
 \alias{R6Experiment}
-\title{R6 Class Representing a `R6Experiment`}
+\title{R6 Class Representing an `R6Experiment`}
 \description{
-This class implements a `R6Experiment`.
+Manages experimental designs and execution for R6Sim models.
+}
+\examples{
+model1 <- MyModel$new("baseline")
+model2 <- MyModel$new("alternative")
+
+experiment <- R6Experiment$new(model1, model2)
+experiment$set_parameter("growth_rate", "grid", values = c(0.01, 0.05))
+experiment$set_parameter("noise", "lhs", min = 0, max = 1)
+experiment$set_design(n_lhs = 50)
+results <- experiment$run(n_cores = 4, parallel = TRUE)
+
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}

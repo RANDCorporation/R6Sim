@@ -8,6 +8,7 @@ Authors@R:
 Description: Provides an R6-based encapsulated object-oriented programming
     framework for simulation modeling studies in R.
 License: GPL (>= 3)
+URL: https://randcorporation.github.io/R6Sim/
 Imports: 
     assertthat,
     data.table,
