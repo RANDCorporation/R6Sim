@@ -19,6 +19,7 @@ Imports:
     purrr,
     R6,
     readxl,
+    writexl,
     stats,
     tidyr,
     utils,
