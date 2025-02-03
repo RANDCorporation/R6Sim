@@ -202,50 +202,7 @@ Every parameter defined in this function can be accessed within the model by usi
 
 
 <dt><code>set_seed</code></dt>
-<dd><p>Whether to set random seeds for reproducibility. If TRUE, generates unique seeds for each replication. Default is TRUE.
-#' @description
-#' Write Experimental design to disk
-#'
-#' @details
-#' Creates a data.frame in which each row represents a single experiment. The json object included in each row contains all information that the models need to re-create themselves in the server-side in a HPC workflow.
-#'
-#' @param path folder where json experimental designs should be saved. Do not specify a file name. If missing, the function will return the design specified below.
-#' @param write_inputs if TRUE (default), writes model inputs to json. Might be unnecessary when inputs are set in the model run script.
-#' @param format "json" or "csv". the natural history design must be written to json, whereas the policy design can be written to json or csv.
-write_design = function(path, write_inputs = T, format = c("json", "csv"))   # Checking arguments, selecting defaults:
-  format &lt;- match.arg(format)  dir.create(path, showWarnings = F)  file_name &lt;- paste0(path, "/exp_design.txt")  if (format == "json")
-    json_exp_design &lt;- R6Experiment_to_json(
-      self = self,
-      experimental_design = self$exp_design,
-      write_inputs = write_inputs
-    )    message(paste0(
-      "Writing Experimental Design JSON File with ",
-      nrow(json_exp_design), " json rows."
-    ))    write.table(
-      x = json_exp_design,
-      file = file_name,
-      row.names = F, col.names = F, quote = F
-    )  if (format == "csv")
-    csv_exp_design &lt;- R6Experiment_to_csv(
-      self = self,
-      experimental_design = self$exp_design,
-      write_inputs = write_inputs
-    ) <!-- %&gt;% -->
-      mutate(across(where(is.logical), .fns = ~ as.numeric(.x)))    message(paste0(
-      "Writing Experimental Design CSV File with ",
-      nrow(csv_exp_design),
-      " rows."
-    ))    # Write file:
-    write.table(
-      x = csv_exp_design,
-      file = file_name,
-      row.names = F, col.names = F, append = F, sep = ","
-    )    # Write column names:
-    write.table(
-      x = names(csv_exp_design),
-      file = paste0(path, "/exp_design_col_names.txt"),
-      row.names = F, col.names = F, append = F, sep = ","
-    ),</p></dd>
+<dd><p>Whether to set random seeds for reproducibility. If TRUE, generates unique seeds for each replication. Default is TRUE.</p></dd>
 
 
 </dl><p></p></div>
@@ -327,26 +284,6 @@ Set TRUE when model compilation is needed (like with odin).</p></dd>
 
     </div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">model1</span> <span class="op">&lt;-</span> <span class="va">MyModel</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="st">"baseline"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'MyModel' not found</span>
-<span class="r-in"><span><span class="va">model2</span> <span class="op">&lt;-</span> <span class="va">MyModel</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="st">"alternative"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'MyModel' not found</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">experiment</span> <span class="op">&lt;-</span> <span class="va">R6Experiment</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">model1</span>, <span class="va">model2</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'model1' not found</span>
-<span class="r-in"><span><span class="va">experiment</span><span class="op">$</span><span class="fu">set_parameter</span><span class="op">(</span><span class="st">"growth_rate"</span>, <span class="st">"grid"</span>, values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0.05</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'experiment' not found</span>
-<span class="r-in"><span><span class="va">experiment</span><span class="op">$</span><span class="fu">set_parameter</span><span class="op">(</span><span class="st">"noise"</span>, <span class="st">"lhs"</span>, min <span class="op">=</span> <span class="fl">0</span>, max <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'experiment' not found</span>
-<span class="r-in"><span><span class="va">experiment</span><span class="op">$</span><span class="fu">set_design</span><span class="op">(</span>n_lhs <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'experiment' not found</span>
-<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="va">experiment</span><span class="op">$</span><span class="fu">run</span><span class="op">(</span>n_cores <span class="op">=</span> <span class="fl">4</span>, parallel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'experiment' not found</span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
