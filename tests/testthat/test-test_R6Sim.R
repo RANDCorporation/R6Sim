@@ -276,6 +276,69 @@ test_that("R6Experiment runs parallel with replications", {
 })
 
 
+test_that("R6Experiment handles models with no parameter distributions", {
+  # Create two models
+  model1 <- Mymodel$new(name = "test1")
+  model2 <- Mymodel$new(name = "test2")
+
+  # Create experiment with models having no params_df
+  experiment <- R6Experiment$new(model1, model2)
+  experiment$set_design(n_lhs = 2)
+
+  # Check that params_df was created for both models
+  expect_false(is.null(experiment$models[[1]]$params_df))
+  expect_false(is.null(experiment$models[[2]]$params_df))
+
+  # Check params_df structure
+  expect_true(nrow(experiment$models[[1]]$params_df) == 1)
+  expect_true("param.id" %in% names(experiment$models[[1]]$params_df))
+})
+
+test_that("R6Experiment errors on inconsistent parameter distributions", {
+  # Create two models
+  model1 <- Mymodel$new(name = "test1")
+  model2 <- Mymodel$new(name = "test2")
+
+  # Set params_df for only one model
+  model1$set_param_dist(
+    params_list = list(default = data.frame(weights = 1)),
+    param_dist_weights = "weights",
+    use_average = TRUE
+  )
+
+  # Create experiment with inconsistent models
+  experiment <- R6Experiment$new(model1, model2)
+
+  # Should error when setting design
+  expect_error(
+    experiment$set_design(n_lhs = 2),
+    regexp = "Inconsistent parameter distributions"
+  )
+})
+
+test_that("R6Experiment works with all models having parameter distributions", {
+  # Create two models
+  model1 <- Mymodel$new(name = "test1")
+  model2 <- Mymodel$new(name = "test2")
+
+  # Set params_df for both models
+  params <- list(default = data.frame(weights = 1))
+  model1$set_param_dist(params_list = params, param_dist_weights = "weights", use_average = TRUE)
+  model2$set_param_dist(params_list = params, param_dist_weights = "weights", use_average = TRUE)
+
+  # Create and set up experiment
+  experiment <- R6Experiment$new(model1, model2)
+  experiment$set_design(n_lhs = 2)
+
+  # Check experiment setup worked
+  expect_false(is.null(experiment$params))
+  expect_false(is.null(experiment$policy_design))
+})
+
+
+
+
+
 
 # complete tests that involve writing the experiment to disk:
 #

@@ -116,6 +116,30 @@ R6Experiment_set_design <- function(self, n_lhs, blocks, grid_design_df, convert
   models_df <- data.frame(model.name = sapply(self$models, "[[", "name")) %>%
     dplyr::mutate(model.id = dplyr::row_number())
 
+  # Check if all models have params_df table
+  has_params <- sapply(self$models, function(m) !is.null(m$params_df))
+
+  # If some models have params_df and others don't, throw error
+  if (any(has_params) && !all(has_params)) {
+    models_without_params <- names(has_params)[!has_params]
+    stop(sprintf("Inconsistent parameter distributions: Models %s are missing params_df while other models have it. Either all models should have parameter distributions set or none should.",
+                 paste(models_without_params, collapse=", ")))
+  }
+
+  # If no models have params_df, set empty parameter distribution for each
+  if (!any(has_params)) {
+    # Iterate through indices to modify the original models
+    for (i in seq_along(self$models)) {
+      # Create minimal params_df with single row and param.id
+      self$models[[i]]$set_param_dist(
+        params_list = list(default = data.frame(weights = 1)),
+        param_dist_weights = "weights",
+        use_average = TRUE
+      )
+    }
+  }
+
+
   # Assign model ids to their params tables:
   for (model_id in models_df$model.id) {
     # Assign the model id to the params table:
