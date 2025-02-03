@@ -17,7 +17,7 @@
 #
 # See LICENSE.md and README.md for more information on usage and licensing
 #
-# Author: Pedro Nascimento de Lima
+# Author: Pedro Nascimento de Lima.
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#
