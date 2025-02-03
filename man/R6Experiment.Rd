@@ -6,17 +6,6 @@
 \description{
 Manages experimental designs and execution for R6Sim models.
 }
-\examples{
-model1 <- MyModel$new("baseline")
-model2 <- MyModel$new("alternative")
-
-experiment <- R6Experiment$new(model1, model2)
-experiment$set_parameter("growth_rate", "grid", values = c(0.01, 0.05))
-experiment$set_parameter("noise", "lhs", min = 0, max = 1)
-experiment$set_design(n_lhs = 50)
-results <- experiment$run(n_cores = 4, parallel = TRUE)
-
-}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -141,73 +130,7 @@ Set Experimental Design
 
 \item{\code{n_reps}}{Number of stochastic replications for each experimental design point. Default is 1.}
 
-\item{\code{set_seed}}{Whether to set random seeds for reproducibility. If TRUE, generates unique seeds for each replication. Default is TRUE.
-#' @description
-#' Write Experimental design to disk
-#'
-#' @details
-#' Creates a data.frame in which each row represents a single experiment. The json object included in each row contains all information that the models need to re-create themselves in the server-side in a HPC workflow.
-#'
-#' @param path folder where json experimental designs should be saved. Do not specify a file name. If missing, the function will return the design specified below.
-#' @param write_inputs if TRUE (default), writes model inputs to json. Might be unnecessary when inputs are set in the model run script.
-#' @param format "json" or "csv". the natural history design must be written to json, whereas the policy design can be written to json or csv.
-write_design = function(path, write_inputs = T, format = c("json", "csv")) {
-
-  # Checking arguments, selecting defaults:
-  format <- match.arg(format)
-
-  dir.create(path, showWarnings = F)
-
-  file_name <- paste0(path, "/exp_design.txt")
-
-  if (format == "json") {
-    json_exp_design <- R6Experiment_to_json(
-      self = self,
-      experimental_design = self$exp_design,
-      write_inputs = write_inputs
-    )
-
-    message(paste0(
-      "Writing Experimental Design JSON File with ",
-      nrow(json_exp_design), " json rows."
-    ))
-
-    write.table(
-      x = json_exp_design,
-      file = file_name,
-      row.names = F, col.names = F, quote = F
-    )
-  }
-
-  if (format == "csv") {
-    csv_exp_design <- R6Experiment_to_csv(
-      self = self,
-      experimental_design = self$exp_design,
-      write_inputs = write_inputs
-    ) %>%
-      mutate(across(where(is.logical), .fns = ~ as.numeric(.x)))
-
-    message(paste0(
-      "Writing Experimental Design CSV File with ",
-      nrow(csv_exp_design),
-      " rows."
-    ))
-
-    # Write file:
-    write.table(
-      x = csv_exp_design,
-      file = file_name,
-      row.names = F, col.names = F, append = F, sep = ","
-    )
-
-    # Write column names:
-    write.table(
-      x = names(csv_exp_design),
-      file = paste0(path, "/exp_design_col_names.txt"),
-      row.names = F, col.names = F, append = F, sep = ","
-    )
-  }
-},}
+\item{\code{set_seed}}{Whether to set random seeds for reproducibility. If TRUE, generates unique seeds for each replication. Default is TRUE.}
 }
 \if{html}{\out{</div>}}
 }
