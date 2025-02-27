@@ -10,3 +10,4 @@ dev
 ^LICENSE\.md$
 ^codecov\.yml$
 ^CLAUDE\.md$
+^ROADMAP\.md$
