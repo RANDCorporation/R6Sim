@@ -95,7 +95,7 @@ R6Sim <- R6::R6Class(
     #' Create a new `R6Sim` object.
     #' @param name name of the model to be created.
     #' @return s new `R6Sim` object.
-    initialize = function(name) {
+    initialize = function(name = "model name") {
       stopifnot(is.character(name), length(name) == 1)
       self$name <- name
       # Initializing inputs objects:
