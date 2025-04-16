@@ -95,6 +95,8 @@ run_single_experiment <- function(policy_design_id, self, model_from_cluster_eva
 
   id_cols <- c("grid.id", "lhs.id", "params_design.id", "param.id", "model.id", "all.params.id", "policy.exp.id", "rep.id", "seed")
 
+
+
   scenario_inputs <- self$policy_design[policy_design_id, ] %>%
     select(-any_of(id_cols)) %>%
     as.data.frame()
@@ -106,7 +108,7 @@ run_single_experiment <- function(policy_design_id, self, model_from_cluster_eva
 
   # If setting seed, do it
   if(self$set_seed) {
-    set.seed(scenario_inputs$seed)
+    set.seed(self$policy_design[policy_design_id, ]$seed)
   }
 
   res <- model$simulate(...) %>% as.data.frame()
