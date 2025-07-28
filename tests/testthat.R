@@ -9,5 +9,6 @@
 library(testthat)
 library(R6Sim)
 library(dplyr)
+library(future)
 
 test_check("R6Sim")

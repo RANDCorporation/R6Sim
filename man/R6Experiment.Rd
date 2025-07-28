@@ -165,22 +165,13 @@ Run Experiment
 \subsection{Method \code{run_single_experiment()}}{
 Run a single experiment
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run_single_experiment(
-  policy_design_id,
-  model_from_cluster_eval,
-  parallel,
-  ...
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run_single_experiment(policy_design_id, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{policy_design_id}}{ID of the policy design to run}
-
-\item{\code{model_from_cluster_eval}}{If TRUE, expects model instances to be created in cluster_eval_script.}
-
-\item{\code{parallel}}{whether to evaluate run in parallel}
 
 \item{\code{...}}{additional parameters passed to model simulation}
 }

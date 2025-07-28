@@ -61,10 +61,11 @@
 #'     }
 #'   )
 #' )
-#'
 #' model <- MyModel$new("pop_model")
+#' model$set_input("population", 1000, type = "parameter")
+#' model$set_input("growth_rates", c(0.01, 0.02), type = "scenario")
+#' model$set_input("settings", list(iterations = 100), type = "config")
 #' results <- model$simulate()
-#'
 #' @export
 R6Sim <- R6::R6Class(
 
