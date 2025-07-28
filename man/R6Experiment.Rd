@@ -38,6 +38,7 @@ Manages experimental designs and execution for R6Sim models.
 \item \href{#method-R6Experiment-set_parameter}{\code{R6Experiment$set_parameter()}}
 \item \href{#method-R6Experiment-set_design}{\code{R6Experiment$set_design()}}
 \item \href{#method-R6Experiment-run}{\code{R6Experiment$run()}}
+\item \href{#method-R6Experiment-run_single_experiment}{\code{R6Experiment$run_single_experiment()}}
 \item \href{#method-R6Experiment-clone}{\code{R6Experiment$clone()}}
 }
 }
@@ -147,12 +148,27 @@ The policy experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` 
 \subsection{Method \code{run()}}{
 Run Experiment
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run(
-  n_cores = 3,
-  parallel = F,
-  cluster_eval_script = NULL,
-  model_from_cluster_eval = F,
-  packages = NULL,
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run(...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{additional parameters passed to model simulation}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-R6Experiment-run_single_experiment"></a>}}
+\if{latex}{\out{\hypertarget{method-R6Experiment-run_single_experiment}{}}}
+\subsection{Method \code{run_single_experiment()}}{
+Run a single experiment
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run_single_experiment(
+  policy_design_id,
+  model_from_cluster_eval,
+  parallel,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -160,21 +176,11 @@ Run Experiment
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{n_cores}}{number of cores to use}
+\item{\code{policy_design_id}}{ID of the policy design to run}
+
+\item{\code{model_from_cluster_eval}}{If TRUE, expects model instances to be created in cluster_eval_script.}
 
 \item{\code{parallel}}{whether to evaluate run in parallel}
-
-\item{\code{cluster_eval_script}}{Optional path to R script that is sourced once in each parallel process before running experiments.
-Useful for model setup that should happen once per process, like:
-- Loading required packages
-- Compiling models (e.g. odin models)
-- Setting up simulation parameters/data
-- Creating model instances for use across runs}
-
-\item{\code{model_from_cluster_eval}}{If TRUE, expects model instances to be created in cluster_eval_script.
-Set TRUE when model compilation is needed (like with odin).}
-
-\item{\code{packages}}{character vector of packages to be loaded before running the model in parallel.}
 
 \item{\code{...}}{additional parameters passed to model simulation}
 }

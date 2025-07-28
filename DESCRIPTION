@@ -13,10 +13,11 @@ Imports:
     assertthat,
     data.table,
     dplyr,
+    future.apply,
     jsonlite,
     lhs,
     magrittr,
-    parallel,
+    progressr,
     purrr,
     R6,
     readxl,
@@ -25,8 +26,6 @@ Imports:
     utils,
     yaml
 Suggests: 
-    deSolve,
-    ggplot2,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),

@@ -30,6 +30,8 @@
 #' @description
 #' Manages experimental designs and execution for R6Sim models.
 #' @import R6
+#' @import progressr
+#' @import future.apply
 #' @export
 R6Experiment <- R6::R6Class(
   classname = "R6Experiment",
@@ -114,24 +116,49 @@ R6Experiment <- R6::R6Class(
     #' @description
     #' Run Experiment
     #'
-    #' @param n_cores number of cores to use
-    #' @param parallel whether to evaluate run in parallel
-    #' @param cluster_eval_script Optional path to R script that is sourced once in each parallel process before running experiments.
-    #'        Useful for model setup that should happen once per process, like:
-    #'        - Loading required packages
-    #'        - Compiling models (e.g. odin models)
-    #'        - Setting up simulation parameters/data
-    #'        - Creating model instances for use across runs
-    #' @param model_from_cluster_eval If TRUE, expects model instances to be created in cluster_eval_script.
-    #'        Set TRUE when model compilation is needed (like with odin).
-    #' @param packages character vector of packages to be loaded before running the model in parallel.
     #' @param ... additional parameters passed to model simulation
-    run = function(n_cores = 3, parallel = F, cluster_eval_script = NULL,
-                   model_from_cluster_eval = F, packages = NULL, ...) {
-      R6Experiment_run(self = self, n_cores = n_cores, parallel = parallel,
-                       cluster_eval_script = cluster_eval_script,
-                       model_from_cluster_eval = model_from_cluster_eval, packages = packages, ...)
-    }),
+    run = function(...) {
+      # Use future and progressr for execution
+      progressr::with_progress({
+        p <- progressr::progressor(steps = nrow(self$policy_design))
+
+        results <- future.apply::future_lapply(1:nrow(self$policy_design), function(policy_design_id) {
+          p(sprintf("Running policy design %d", policy_design_id))
+          self$run_single_experiment(policy_design_id, ...)
+        }, future.seed = TRUE)
+      })
+      return(do.call(dplyr::bind_rows, results))
+    },
+
+    #' @description
+    #' Run a single experiment
+    #'
+    #' @param policy_design_id ID of the policy design to run
+    #' @param ... additional parameters passed to model simulation
+    run_single_experiment = function(policy_design_id, ...) {
+      model <- self$models[[self$policy_design$model.id[policy_design_id]]]
+
+      id_cols <- c("grid.id", "lhs.id", "params_design.id", "param.id", "model.id", "all.params.id", "policy.exp.id", "rep.id", "seed")
+
+      scenario_inputs <- self$policy_design[policy_design_id, ] %>%
+        select(-any_of(id_cols)) %>%
+        as.data.frame()
+
+      # Set each input
+      for (var in names(scenario_inputs)) {
+        model$set_input(var, scenario_inputs[, var])
+      }
+
+      # If setting seed, do it
+      if(self$set_seed) {
+        set.seed(self$policy_design[policy_design_id, ]$seed)
+      }
+
+      res <- model$simulate(...) %>% as.data.frame()
+
+      return(dplyr::bind_cols(self$policy_design[policy_design_id, ], res))
+    }
+    ),
 
   # Use private to hold data that will not be accessed by the user directly.
   private = list(
