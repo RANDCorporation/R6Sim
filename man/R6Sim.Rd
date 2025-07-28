@@ -84,7 +84,7 @@ model$set_input("settings", list(iterations = 100), type = "config")
 \subsection{Method \code{new()}}{
 Create a new `R6Sim` object.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Sim$new(name)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{R6Sim$new(name = "model name")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

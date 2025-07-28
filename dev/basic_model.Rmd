@@ -1,0 +1,283 @@
+---
+title: "Creating SIR Models with R6Sim"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Creating SIR Models with R6Sim}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE
+)
+```
+
+## Introduction
+
+This vignette demonstrates how to create a basic epidemiological model using the `R6Sim` framework. We'll implement the classic SIR (Susceptible-Infectious-Recovered) model using the `deSolve` package to solve the differential equations.
+
+## The SIR Model
+
+The SIR model divides a population into three compartments:
+- **S**: Susceptible individuals who can become infected
+- **I**: Infectious individuals who can transmit the disease
+- **R**: Recovered (or removed) individuals who are immune or deceased
+
+The model is governed by these differential equations:
+
+$$\frac{dS}{dt} = -\beta \frac{SI}{N}$$
+$$\frac{dI}{dt} = \beta \frac{SI}{N} - \gamma I$$
+$$\frac{dR}{dt} = \gamma I$$
+
+Where:
+- $\beta$ is the transmission rate
+- $\gamma$ is the recovery rate
+- $N$ is the total population size
+
+## Implementation with R6Sim
+
+First, let's create an R6 class that inherits from R6Sim:
+
+```{r setup}
+library(R6Sim)
+library(dplyr)
+library(magrittr)
+library(deSolve)
+
+# Create an SIR epidemic model
+SIRModel <- R6::R6Class(
+  classname = "SIRModel",
+  inherit = R6Sim,
+  
+  public = list(
+    # For storing results
+    results = NULL,
+    
+    # Initialize the model
+    initialize = function(name) {
+      super$initialize(name = name)
+      
+      # Set default parameter values
+      self$set_input("N", 10000, "settings")$          # Total population
+        set_input("I0", 10, "settings")$               # Initial infected
+        set_input("R0", 0, "settings")$                # Initial recovered
+        set_input("beta", 0.3, "natural_history")$     # Transmission rate
+        set_input("gamma", 0.1, "natural_history")$    # Recovery rate
+        set_input("t.max", 150, "settings")$           # Time horizon (days)
+        set_input("dt", 1, "settings")                 # Time step (days)
+    },
+    
+    # Required setup method
+    setup_run = function() {
+      # Any pre-simulation setup
+      invisible(self)
+    },
+    
+    # SIR model equations
+    sir_equations = function(time, state, parameters) {
+      with(as.list(c(state, parameters)), {
+        # Compute the derivatives
+        dS <- -beta * S * I / N
+        dI <- beta * S * I / N - gamma * I
+        dR <- gamma * I
+        
+        # Return the derivatives
+        return(list(c(dS, dI, dR)))
+      })
+    },
+    
+    # Core simulation method
+    simulate = function() {
+      # Initial conditions
+      initial_state <- c(
+        S = self$inputs$N - self$inputs$I0 - self$inputs$R0,
+        I = self$inputs$I0,
+        R = self$inputs$R0
+      )
+      
+      # Parameters for the ODE solver
+      parameters <- c(
+        N = self$inputs$N,
+        beta = self$inputs$beta,
+        gamma = self$inputs$gamma
+      )
+      
+      # Time points
+      times <- seq(0, self$inputs$t.max, by = self$inputs$dt)
+      
+      # Solve the ODEs
+      self$results <- as.data.frame(ode(
+        y = initial_state,
+        times = times,
+        func = self$sir_equations,
+        parms = parameters
+      ))
+      
+      # Calculate key epidemic metrics
+      peak_infected <- max(self$results$I)
+      peak_day <- self$results$time[which.max(self$results$I)]
+      final_size <- self$results$R[length(self$results$R)]
+      attack_rate <- final_size / self$inputs$N
+      
+      # Return summary statistics
+      return(data.frame(
+        peak_infected = peak_infected,
+        peak_day = peak_day,
+        final_size = final_size,
+        attack_rate = attack_rate,
+        R0 = self$inputs$beta / self$inputs$gamma
+      ))
+    },
+    
+    # Plot epidemic curves
+    plot_curves = function() {
+      if (is.null(self$results)) {
+        stop("You need to run simulate() first")
+      }
+      
+      # Reshape for plotting
+      plot_data <- tidyr::pivot_longer(
+        self$results, 
+        cols = c("S", "I", "R"),
+        names_to = "Compartment", 
+        values_to = "Count"
+      )
+      
+      return(plot_data)
+    }
+  )
+)
+
+# Create an instance of the model
+sir_model <- SIRModel$new("basic_sir_model")
+```
+
+## Running the Model
+
+Now let's run the model with the default parameters:
+
+```{r}
+# Run the model
+sir_model$setup_run()
+results <- sir_model$simulate()
+results
+```
+
+## Visualizing the Results
+
+We can visualize the classic SIR curves:
+
+```{r, fig.width=7, fig.height=5}
+# Get the epidemic curves data
+curves_data <- sir_model$plot_curves()
+
+# Plot using base R or ggplot2 if available
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  library(ggplot2)
+  
+  ggplot(curves_data, aes(x = time, y = Count, color = Compartment)) +
+    geom_line(linewidth = 1) +
+    scale_color_manual(values = c("I" = "red", "R" = "green", "S" = "blue")) +
+    theme_minimal() +
+    labs(title = "SIR Model Dynamics",
+         x = "Time (days)",
+         y = "Population")
+} else {
+  # Fallback to base R plotting
+  plot(sir_model$results$time, sir_model$results$S, type = "l", col = "blue",
+       xlab = "Time (days)", ylab = "Population", 
+       main = "SIR Model Dynamics",
+       ylim = c(0, sir_model$inputs$N))
+  lines(sir_model$results$time, sir_model$results$I, col = "red")
+  lines(sir_model$results$time, sir_model$results$R, col = "green")
+  legend("right", legend = c("Susceptible", "Infected", "Recovered"),
+         col = c("blue", "red", "green"), lty = 1)
+}
+```
+
+## Exploring Different Parameters
+
+Let's see how changing the transmission rate affects the epidemic:
+
+```{r}
+# Change the transmission rate and re-run
+sir_model$set_input("beta", 0.5, "natural_history")
+sir_model$setup_run()
+results_high_beta <- sir_model$simulate()
+
+# Compare results
+results
+results_high_beta
+```
+
+We can also explore changes in the recovery rate:
+
+```{r}
+# Change the recovery rate and re-run
+sir_model$set_input("gamma", 0.2, "natural_history")
+sir_model$setup_run()
+results_high_gamma <- sir_model$simulate()
+
+# Compare all results
+rbind(
+  "Original" = results[1,],
+  "High Beta" = results_high_beta[1,],
+  "High Gamma" = results_high_gamma[1,]
+)
+```
+
+## Parameter Distributions for Uncertainty Analysis
+
+To account for parameter uncertainty, we can create distributions for key parameters:
+
+```{r}
+# Create parameter distribution for beta and gamma
+param_distribution <- data.frame(
+  beta = c(0.2, 0.3, 0.4, 0.5),
+  gamma = c(0.1, 0.15, 0.2, 0.25),
+  weights = c(0.25, 0.25, 0.25, 0.25)
+)
+
+# Set parameter distribution in the model
+sir_model$set_param_dist(
+  params_list = list(uncertainties = param_distribution),
+  param_dist_weights = "weights",
+  use_average = TRUE  # Use the average values instead of sampling
+)
+
+# View the parameter sets
+head(sir_model$params_df)
+```
+
+## Saving and Loading Model Configuration
+
+You can save your model configuration as JSON for later use:
+
+```{r}
+# Save model configuration as JSON
+model_json <- sir_model$to_json()
+
+# Create a new model and load configuration
+new_sir_model <- SIRModel$new("restored_model")
+new_sir_model$set_inputs_from_json(model_json)
+
+# Verify model was loaded correctly
+new_sir_model$inputs$beta
+new_sir_model$inputs$gamma
+```
+
+## Conclusion
+
+In this vignette, you've learned how to:
+
+1. Create an epidemiological model using the `R6Sim` framework
+2. Implement a classic SIR model with differential equations using `deSolve`
+3. Run simulations and analyze results
+4. Explore different parameter values
+5. Set up parameter distributions for uncertainty analysis
+6. Save and restore model configurations using JSON
+
+In the next vignette, we'll demonstrate how to use the `R6Experiment` class to run systematic experiments with this SIR model, exploring different scenarios and parameter combinations.

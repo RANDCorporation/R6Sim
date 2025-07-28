@@ -1,0 +1,345 @@
+---
+title: "Running Experiments with R6Sim"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Running Experiments with R6Sim}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE
+)
+```
+
+## Introduction
+
+In the previous vignette, we created a basic SIR model using the `R6Sim` framework. Now, we'll explore how to use the `R6Experiment` class to run systematic experiments with this model, exploring different scenarios and parameter combinations.
+
+## Setting Up Our SIR Model
+
+First, let's recreate the SIR model from the previous vignette:
+
+```{r setup}
+library(R6Sim)
+library(dplyr)
+library(magrittr)
+library(deSolve)
+
+# Create an SIR epidemic model
+SIRModel <- R6::R6Class(
+  classname = "SIRModel",
+  inherit = R6Sim,
+  
+  public = list(
+    results = NULL,
+    
+    initialize = function(name) {
+      super$initialize(name = name)
+      
+      # Set default parameter values
+      self$set_input("N", 10000, "settings")$
+        set_input("I0", 10, "settings")$
+        set_input("R0", 0, "settings")$
+        set_input("beta", 0.3, "natural_history")$
+        set_input("gamma", 0.1, "natural_history")$
+        set_input("t.max", 150, "settings")$
+        set_input("dt", 1, "settings")
+    },
+    
+    setup_run = function() {
+      invisible(self)
+    },
+    
+    sir_equations = function(time, state, parameters) {
+      with(as.list(c(state, parameters)), {
+        dS <- -beta * S * I / N
+        dI <- beta * S * I / N - gamma * I
+        dR <- gamma * I
+        return(list(c(dS, dI, dR)))
+      })
+    },
+    
+    simulate = function() {
+      initial_state <- c(
+        S = self$inputs$N - self$inputs$I0 - self$inputs$R0,
+        I = self$inputs$I0,
+        R = self$inputs$R0
+      )
+      
+      parameters <- c(
+        N = self$inputs$N,
+        beta = self$inputs$beta,
+        gamma = self$inputs$gamma
+      )
+      
+      times <- seq(0, self$inputs$t.max, by = self$inputs$dt)
+      
+      self$results <- as.data.frame(ode(
+        y = initial_state,
+        times = times,
+        func = self$sir_equations,
+        parms = parameters
+      ))
+      
+      # Calculate epidemic metrics
+      peak_infected <- max(self$results$I)
+      peak_day <- self$results$time[which.max(self$results$I)]
+      final_size <- self$results$R[length(self$results$R)]
+      attack_rate <- final_size / self$inputs$N
+      
+      return(data.frame(
+        peak_infected = peak_infected,
+        peak_day = peak_day,
+        final_size = final_size,
+        attack_rate = attack_rate,
+        R0 = self$inputs$beta / self$inputs$gamma
+      ))
+    }
+  )
+)
+
+# Create a basic model instance
+sir_model <- SIRModel$new("basic_sir")
+```
+
+## Creating an Experiment
+
+Now, let's use the `R6Experiment` class to explore how different parameter combinations affect the epidemic outcomes:
+
+```{r}
+# Create a new experiment using our SIR model
+experiment <- R6Experiment$new(sir_model)
+```
+
+## Defining Parameters for the Experiment
+
+We'll define two key parameters to explore:
+
+1. `beta` (transmission rate) - looking at different rates of disease spread
+2. `gamma` (recovery rate) - exploring different disease durations
+
+```{r}
+# Define transmission rate parameter using a grid design
+experiment$set_parameter(
+  parameter_name = "beta",
+  experimental_design = "grid",
+  values = c(0.2, 0.3, 0.4, 0.5)
+)
+
+# Define recovery rate parameter using a grid design
+experiment$set_parameter(
+  parameter_name = "gamma",
+  experimental_design = "grid",
+  values = c(0.05, 0.1, 0.2)
+)
+```
+
+## Setting Up the Experimental Design
+
+Now we create the full experimental design by combining all parameter values:
+
+```{r}
+# Create the experimental design
+experiment$set_design()
+
+# Examine the resulting design
+head(experiment$policy_design)
+nrow(experiment$policy_design)
+```
+
+The experimental design now contains all combinations of our parameter values. Let's see the structure:
+
+```{r}
+# Show parameter combinations
+experiment$policy_design %>%
+  select(beta, gamma) %>%
+  distinct()
+```
+
+## Running the Experiment
+
+Now we'll run the experiment across all parameter combinations:
+
+```{r}
+# Run the experiment (in serial mode for simplicity)
+results <- experiment$run(parallel = FALSE)
+
+# Examine the first few results
+head(results)
+```
+
+## Analyzing the Results
+
+Now that we have our results, we can analyze how different parameters affect the epidemic outcomes:
+
+```{r, fig.width=7, fig.height=5}
+# Summary statistics by beta and gamma
+summary_results <- results %>%
+  group_by(beta, gamma) %>%
+  summarize(
+    mean_peak_infected = mean(peak_infected),
+    mean_peak_day = mean(peak_day),
+    mean_attack_rate = mean(attack_rate),
+    mean_R0 = mean(R0),
+    .groups = "drop"
+  )
+
+summary_results
+```
+
+Let's visualize how the transmission rate (beta) and recovery rate (gamma) affect the peak number of infected individuals:
+
+```{r, fig.width=7, fig.height=5}
+# Visualization if ggplot2 is available
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  library(ggplot2)
+  
+  ggplot(summary_results, aes(x = beta, y = gamma, fill = mean_peak_infected)) +
+    geom_tile() +
+    scale_fill_viridis_c() +
+    theme_minimal() +
+    labs(title = "Peak Infected Population by Transmission and Recovery Rates",
+         x = "Transmission Rate (β)",
+         y = "Recovery Rate (γ)",
+         fill = "Peak Infected")
+}
+```
+
+## Adding Stochasticity with Replications
+
+To account for stochasticity in our model, we can use replications:
+
+```{r}
+# Create a new experiment with a stochastic SIR model
+StochasticSIRModel <- R6::R6Class(
+  classname = "StochasticSIRModel",
+  inherit = SIRModel,
+  
+  public = list(
+    # Override simulate to add stochasticity
+    simulate = function() {
+      # Call parent's simulate method first
+      result <- super$simulate()
+      
+      # Add some stochasticity to the results (simplified example)
+      noise_factor <- rnorm(1, mean = 1, sd = 0.05)
+      result$peak_infected <- result$peak_infected * noise_factor
+      result$final_size <- result$final_size * noise_factor
+      
+      return(result)
+    }
+  )
+)
+
+# Create stochastic model
+stochastic_model <- StochasticSIRModel$new("stochastic_sir")
+
+# Create experiment with stochastic model
+stochastic_experiment <- R6Experiment$new(stochastic_model)
+
+# Set parameters (using fewer combinations for simplicity)
+stochastic_experiment$set_parameter(
+  parameter_name = "beta",
+  experimental_design = "grid",
+  values = c(0.3, 0.4)
+)
+
+stochastic_experiment$set_parameter(
+  parameter_name = "gamma",
+  experimental_design = "grid",
+  values = c(0.1, 0.2)
+)
+
+# Set up design with 5 replications for each parameter combination
+stochastic_experiment$set_design(n_reps = 5, set_seed = TRUE)
+
+# Examine the design - note the rep.id and seed columns
+head(stochastic_experiment$policy_design)
+```
+
+Now we can run the stochastic experiment:
+
+```{r}
+# Run the stochastic experiment
+stochastic_results <- stochastic_experiment$run(parallel = FALSE)
+
+# Examine results with replications
+stochastic_results %>%
+  group_by(beta, gamma) %>%
+  summarize(
+    mean_peak_infected = mean(peak_infected),
+    sd_peak_infected = sd(peak_infected),
+    cv_peak_infected = sd_peak_infected / mean_peak_infected,
+    .groups = "drop"
+  )
+```
+
+## Comparing Multiple Model Variants
+
+One powerful feature of `R6Experiment` is the ability to run experiments with multiple model variants. Let's create a modified SIR model with vaccination:
+
+```{r}
+# Create a simpler comparison example with two standard models
+model_A <- SIRModel$new("model_A")
+model_B <- SIRModel$new("model_B")
+
+# Set different default parameters for model B
+model_B$set_input("beta", 0.4, "natural_history")
+model_B$set_input("gamma", 0.15, "natural_history")
+
+# Create an experiment with both models
+comparison_experiment <- R6Experiment$new(model_A, model_B)
+
+# Set experimental parameters
+comparison_experiment$set_parameter(
+  parameter_name = "beta", 
+  experimental_design = "grid",
+  values = c(0.3, 0.5)
+)
+
+# Generate the experimental design
+comparison_experiment$set_design()
+
+# Run the experiment
+comparison_results <- comparison_experiment$run(parallel = FALSE)
+
+# Analyze results by model and beta
+comparison_results %>%
+  group_by(model.id, beta) %>%
+  summarize(
+    mean_peak_infected = mean(peak_infected),
+    mean_attack_rate = mean(attack_rate),
+    .groups = "drop"
+  )
+```
+
+## Selecting Specific Parameter or Design Points
+
+You can also run experiments with specific parameter sets or design points:
+
+```{r}
+# Let's run the experiment again, but only for the first 2 parameter combinations
+selected_results <- experiment$run(
+  parallel = FALSE
+)[1:2, ]
+
+# View the results
+selected_results
+```
+
+## Conclusion
+
+In this vignette, we've demonstrated how to use the `R6Experiment` class to:
+
+1. Set up structured experiments with multiple parameters
+2. Run simulations across all parameter combinations
+3. Add stochasticity with replications
+4. Compare multiple model variants
+5. Analyze and visualize experiment results
+6. Select specific design points for simulation
+
+The `R6Experiment` framework provides a powerful way to systematically explore model behavior across different parameter settings and scenarios, enabling comprehensive sensitivity analysis and policy evaluation.
