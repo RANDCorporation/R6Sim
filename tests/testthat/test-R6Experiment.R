@@ -1,6 +1,49 @@
 # This file contains tests specifically for the R6Experiment class.
-library(future)
+
+# Ensure all required libraries are loaded
 library(dplyr)
+library(tidyr)
+library(future)
+
+# Sample model:
+Mymodel <- R6::R6Class(
+  classname = "Mymodel",
+  inherit = R6Sim,
+  public = list(
+    sim_res = NULL,
+
+    # Custom Initialize function
+    initialize = function(name) {
+      super$initialize(name = name)
+      self$set_input("pop.size", 100)$
+        set_input("risk.mean", 0.01)$
+        set_input("risk.sd", 0.001)$
+        set_input(name = "trials", value = 10)
+    },
+
+    # Sample Simulate function
+    simulate = function() {
+
+      # Create a sample population with some health events:
+      sim_res <- data.frame(
+        p.id = 1:self$inputs$pop.size,
+        risk = rnorm(n = self$inputs$pop.size, mean = self$inputs$risk.mean, sd = self$inputs$risk.sd)
+      ) %>%
+        mutate(probability.event = 1 - exp(-risk)) %>%
+        mutate(n.events = rbinom(n = 1:self$inputs$pop.size, size = self$inputs$trials, prob = probability.event)) %>%
+        group_by() %>%
+        summarise(n.events = sum(n.events))
+
+      invisible(sim_res)
+    }
+  )
+)
+
+# Creating a model object -------------------------------------------------
+
+# Creates a model object and gives it a name.
+model <- Mymodel$new(name = "test")
+
 
 # Test R6Experiment with set_parameter
 
@@ -50,13 +93,14 @@ test_that("R6Experiment works with pre-existing design", {
 # Test R6Experiment runs in parallel using future
 
 test_that("R6Experiment runs in parallel using future", {
+  # Ensure all required libraries are loaded for this test
   experiment <- R6Experiment$new(model)
 
   experiment$set_parameter(parameter_name = "Test1", experimental_design = "grid", values = c(1, 2))
   experiment$set_design(n_reps = 3)
 
   # Set up future for parallel execution
-  future::plan(future::multisession, workers = 2)
+  plan(multisession, workers = 2)
 
   # Run in parallel mode
   results <- experiment$run()
@@ -66,7 +110,7 @@ test_that("R6Experiment runs in parallel using future", {
   expect_true(all(c("rep.id", "seed") %in% names(results)))
 
   # Reset future plan to sequential
-  future::plan(future::sequential)
+  plan(sequential)
 })
 
 # Test R6Experiment runs sequentially

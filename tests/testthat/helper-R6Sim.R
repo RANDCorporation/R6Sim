@@ -1,5 +1,6 @@
 # This helper file contains shared setup code for R6Sim tests.
 library(dplyr)
+library(tidyr)
 
 # Sample model:
 Mymodel <- R6::R6Class(
