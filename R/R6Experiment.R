@@ -116,16 +116,22 @@ R6Experiment <- R6::R6Class(
     #' @description
     #' Run Experiment
     #'
+    #' @importFrom dplyr bind_rows
+    #' @importFrom dplyr select
+    #' @importFrom dplyr any_of
+    #' @importFrom progressr with_progress
+    #' @importFrom progressr progressor
+    #' @importFrom future.apply future_lapply
     #' @param ... additional parameters passed to model simulation
     run = function(...) {
       # Use future and progressr for execution
       progressr::with_progress({
-        p <- progressr::progressor(steps = nrow(self$policy_design))
+      p <- progressr::progressor(steps = nrow(self$policy_design))
 
-        results <- future.apply::future_lapply(1:nrow(self$policy_design), function(policy_design_id) {
-          p(sprintf("Running policy design %d", policy_design_id))
-          self$run_single_experiment(policy_design_id, ...)
-        }, future.seed = TRUE)
+      results <- future.apply::future_lapply(1:nrow(self$policy_design), function(policy_design_id) {
+        p(sprintf("Running policy design %d", policy_design_id))
+        self$run_single_experiment(policy_design_id, ...)
+      }, future.seed = TRUE)
       })
       return(do.call(dplyr::bind_rows, results))
     },
