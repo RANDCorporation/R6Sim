@@ -92,11 +92,6 @@ R6Sim <- R6::R6Class(
     #' Accepts numeric, character, logical, data.frame and list inputs.
     #' Type tags enable selective JSON export.
     #'
-    #' @examples
-    #' model$set_input("population", 1000, type = "parameter")
-    #' model$set_input("growth_rates", c(0.01, 0.02), type = "scenario")
-    #' model$set_input("settings", list(iterations = 100), type = "config")
-    #'
     #' @export
     set_input = function(name, value, type = NA_character_) {
       R6Sim_set_input(self = self, name = name, value = value, type = type)

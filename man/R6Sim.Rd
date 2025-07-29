@@ -14,17 +14,6 @@ The R6Sim class includes functionality for:
 * Parallel execution
 * Parameter sampling
 }
-\examples{
-
-## ------------------------------------------------
-## Method `R6Sim$set_input`
-## ------------------------------------------------
-
-model$set_input("population", 1000, type = "parameter")
-model$set_input("growth_rates", c(0.01, 0.02), type = "scenario")
-model$set_input("settings", list(iterations = 100), type = "config")
-
-}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -100,17 +89,6 @@ Set Input
 Validates input types and maintains input registry.
 Accepts numeric, character, logical, data.frame and list inputs.
 Type tags enable selective JSON export.
-}
-
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{model$set_input("population", 1000, type = "parameter")
-model$set_input("growth_rates", c(0.01, 0.02), type = "scenario")
-model$set_input("settings", list(iterations = 100), type = "config")
-
-}
-\if{html}{\out{</div>}}
-
 }
 
 }

@@ -129,49 +129,51 @@ R6Experiment <- R6::R6Class(
     #' @importFrom foreach %dopar%
     #' @importFrom progressr with_progress
     #' @importFrom progressr progressor
-    #' @param ... additional parameters passed to model simulation
-    #' @param checkpoint_frequency Frequency of checkpoints during the experiment. If NULL, defaults to 10% of the experimental design.
+    #'
+    #' @param checkpoint_frequency Frequency of checkpoints during the experiment. If NULL, defaults to 10 percent of the experimental design.
     #' @param checkpoint_dir Directory to save checkpoints. Default is NULL.
-    #' @param backend Backend to use for parallelization. Options are "future.apply" (default) or "foreach".
+    #' @param backend Backend to use for parallelization. Options are future.apply (default) or foreach.
+    #' @param ... Additional parameters passed to model simulation.
+    #' @return A data.frame containing the results of the experiment.
     run = function(checkpoint_frequency = NULL, checkpoint_dir = NULL, backend = "future.apply", ...) {
-      if (missing(checkpoint_dir)) {
-        checkpoint_dir <- file.path("experiments")
-      }
-
-      if (is.null(self$results)) {
-        self$results <- data.frame()
-      }
-
-      total_steps <- length(unique(self$policy_design$policy.exp.id))
-      completed_steps <- length(unique(self$results$policy.exp.id))
-      remaining_steps <- total_steps - completed_steps
-
-      if (remaining_steps <= 0) {
-        message("All experiments have already been completed.")
-        return(self$results)
-      }
-
-      if (missing(checkpoint_frequency)) {
-        checkpoint_frequency <- max(1, ceiling(remaining_steps * 0.1))
-      }
-
-      checkpoint_iterations <- ceiling(remaining_steps / checkpoint_frequency)
-
-      # Define the checkpoint file name once
-      timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
-      checkpoint_file <- file.path(checkpoint_dir, paste0(timestamp, "_checkpoint.rds"))
-
-      progressr::with_progress({
-        overall_progress <- progressr::progressor(steps = total_steps)
-
-        for (checkpoint_iteration in seq_len(checkpoint_iterations)) {
-          self$run_checkpoint_iteration(
-            checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, ...
-          )
+        if (missing(checkpoint_dir)) {
+            checkpoint_dir <- file.path("experiments")
         }
-      })
 
-      return(self$results)
+        if (is.null(self$results)) {
+            self$results <- data.frame()
+        }
+
+        total_steps <- length(unique(self$policy_design$policy.exp.id))
+        completed_steps <- length(unique(self$results$policy.exp.id))
+        remaining_steps <- total_steps - completed_steps
+
+        if (remaining_steps <= 0) {
+            message("All experiments have already been completed.")
+            return(self$results)
+        }
+
+        if (missing(checkpoint_frequency)) {
+            checkpoint_frequency <- max(1, ceiling(remaining_steps * 0.1))
+        }
+
+        checkpoint_iterations <- ceiling(remaining_steps / checkpoint_frequency)
+
+        # Define the checkpoint file name once
+        timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+        checkpoint_file <- file.path(checkpoint_dir, paste0(timestamp, "_checkpoint.rds"))
+
+        progressr::with_progress({
+          overall_progress <- progressr::progressor(steps = total_steps)
+
+          for (checkpoint_iteration in seq_len(checkpoint_iterations)) {
+            self$run_checkpoint_iteration(
+              checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, ...
+            )
+          }
+        })
+
+        return(self$results)
     },
 
     #' @description

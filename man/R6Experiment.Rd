@@ -155,7 +155,7 @@ Run Experiment
 \if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run(
   checkpoint_frequency = NULL,
   checkpoint_dir = NULL,
-  backend = "foreach",
+  backend = "future.apply",
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -163,15 +163,18 @@ Run Experiment
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{checkpoint_frequency}}{Frequency of checkpoints during the experiment. If NULL, defaults to 10% of the experimental design.}
+\item{\code{checkpoint_frequency}}{Frequency of checkpoints during the experiment. If NULL, defaults to 10 percent of the experimental design.}
 
 \item{\code{checkpoint_dir}}{Directory to save checkpoints. Default is NULL.}
 
-\item{\code{backend}}{Backend to use for parallelization. Options are "future.apply" (default) or "foreach".}
+\item{\code{backend}}{Backend to use for parallelization. Options are future.apply (default) or foreach.}
 
-\item{\code{...}}{additional parameters passed to model simulation}
+\item{\code{...}}{Additional parameters passed to model simulation.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A data.frame containing the results of the experiment.
 }
 }
 \if{html}{\out{<hr>}}
