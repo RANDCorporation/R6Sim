@@ -152,7 +152,12 @@ The policy experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` 
 \subsection{Method \code{run()}}{
 Run Experiment
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run(checkpoint_frequency = NULL, checkpoint_dir = NULL, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run(
+  checkpoint_frequency = NULL,
+  checkpoint_dir = NULL,
+  backend = "foreach",
+  ...
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -161,6 +166,8 @@ Run Experiment
 \item{\code{checkpoint_frequency}}{Frequency of checkpoints during the experiment. If NULL, defaults to 10% of the experimental design.}
 
 \item{\code{checkpoint_dir}}{Directory to save checkpoints. Default is NULL.}
+
+\item{\code{backend}}{Backend to use for parallelization. Options are "future.apply" (default) or "foreach".}
 
 \item{\code{...}}{additional parameters passed to model simulation}
 }
@@ -192,17 +199,13 @@ Run a single experiment
 \subsection{Method \code{checkpoint()}}{
 Save a checkpoint of the experiment.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$checkpoint(checkpoint_dir, checkpoint_iteration)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$checkpoint(checkpoint_file)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{checkpoint_dir}}{Directory to save the checkpoint.}
-
-\item{\code{checkpoint_iteration}}{Current checkpoint iteration.}
-
-\item{\code{results}}{Data frame containing results up to the checkpoint.}
+\item{\code{checkpoint_file}}{Directory to save the checkpoint.}
 }
 \if{html}{\out{</div>}}
 }
@@ -218,8 +221,9 @@ Run a single checkpoint iteration
   checkpoint_frequency,
   remaining_steps,
   overall_progress,
-  checkpoint_dir,
+  checkpoint_file,
   completed_steps,
+  backend,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -231,15 +235,17 @@ Run a single checkpoint iteration
 
 \item{\code{checkpoint_frequency}}{Frequency of checkpoints.}
 
-\item{\code{overall_progress}}{Overall progressor object.}
+\item{\code{remaining_steps}}{Number of steps remaining in the experiment.}
 
-\item{\code{checkpoint_dir}}{Directory for saving checkpoints.}
+\item{\code{overall_progress}}{Overall progressor object for tracking progress.}
+
+\item{\code{checkpoint_file}}{Path to the file where the checkpoint will be saved.}
+
+\item{\code{completed_steps}}{Number of steps already completed in the experiment.}
+
+\item{\code{backend}}{Backend to use for parallelization. Options are "future.apply" (default) or "foreach".}
 
 \item{\code{...}}{Additional parameters passed to model simulation.}
-
-\item{\code{total_steps}}{Total number of steps in the experiment.}
-
-\item{\code{results}}{Current results data frame.}
 }
 \if{html}{\out{</div>}}
 }

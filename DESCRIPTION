@@ -15,6 +15,7 @@ Imports:
     doFuture,
     dplyr,
     foreach,
+    future,
     future.apply,
     jsonlite,
     lhs,
@@ -28,7 +29,6 @@ Imports:
     utils,
     yaml
 Suggests: 
-    future,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
