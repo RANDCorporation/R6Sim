@@ -210,7 +210,9 @@ R6Experiment <- R6::R6Class(
       }
       timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
       checkpoint_file <- file.path(checkpoint_dir, paste0(timestamp, "_checkpoint.rds"))
-      saveRDS(self, checkpoint_file)
+      suppressWarnings({
+        saveRDS(self, checkpoint_file)
+      })
     },
 
     #' @description
@@ -232,7 +234,8 @@ R6Experiment <- R6::R6Class(
         checkpoint_results <- future.apply::future_lapply(seq(checkpoint_start, checkpoint_end), function(policy_design_id) {
           overall_progress(sprintf("Running policy design %d", policy_design_id))
           self$run_single_experiment(policy_design_id, ...)
-        }, future.seed=TRUE, future.packages=c("R6Sim", "dplyr")) %>% dplyr::bind_rows()
+        }, future.seed=TRUE, future.packages=c("R6Sim", "dplyr"))
+        checkpoint_results <- dplyr::bind_rows(checkpoint_results)
       } else if (backend == "foreach") {
         checkpoint_results <- foreach(policy_design_id = seq(checkpoint_start, checkpoint_end), .combine = dplyr::bind_rows, .options.future = list(seed = TRUE)) %dopar% {
           overall_progress(sprintf("Running policy design %d", policy_design_id))

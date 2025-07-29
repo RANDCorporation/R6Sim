@@ -105,8 +105,9 @@ test_that("R6Experiment runs in parallel using future", {
   # Use the backend function in the test
   plan(backend_fn)
 
-  # Run in parallel mode
-  results <- experiment$run()
+  # Run in parallel mode with checkpoint_dir
+  temp_checkpoint_dir <- tempfile()
+  results <- experiment$run(checkpoint_dir = temp_checkpoint_dir)
 
   expect_equal(length(unique(results$rep.id)), 3)
   expect_equal(nrow(results), nrow(experiment$policy_design))
@@ -114,6 +115,9 @@ test_that("R6Experiment runs in parallel using future", {
 
   # Reset future plan to sequential
   plan(sequential)
+
+  # Close/delete the temporary checkpoint file
+  unlink(temp_checkpoint_dir, recursive = TRUE)
 })
 
 # Test R6Experiment runs sequentially
@@ -124,12 +128,16 @@ test_that("R6Experiment runs sequentially", {
   experiment$set_parameter(parameter_name = "Test1", experimental_design = "grid", values = c(1, 2))
   experiment$set_design(n_reps = 3)
 
-  # Run in sequential mode
-  results <- experiment$run()
+  # Run in sequential mode with checkpoint_dir
+  temp_checkpoint_dir <- tempfile()
+  results <- experiment$run(checkpoint_dir = temp_checkpoint_dir)
 
   expect_equal(length(unique(results$rep.id)), 3)
   expect_equal(nrow(results), nrow(experiment$policy_design))
   expect_true(all(c("rep.id", "seed") %in% names(results)))
+
+  # Close/delete the temporary checkpoint file
+  unlink(temp_checkpoint_dir, recursive = TRUE)
 })
 
 # Test R6Experiment produces identical results with the same seed
@@ -147,10 +155,16 @@ test_that("R6Experiment produces identical results with the same seed", {
   experiment2$set_parameter(parameter_name = "Test1", experimental_design = "grid", values = c(1, 2))
   experiment2$set_design(n_reps = 3, set_seed = TRUE)
 
-  # Run both experiments
-  results1 <- experiment1$run()
-  results2 <- experiment2$run()
+  # Run both experiments with checkpoint_dir
+  temp_checkpoint_dir1 <- tempfile()
+  temp_checkpoint_dir2 <- tempfile()
+  results1 <- experiment1$run(checkpoint_dir = temp_checkpoint_dir1)
+  results2 <- experiment2$run(checkpoint_dir = temp_checkpoint_dir2)
 
   # Verify that results are identical
   expect_identical(results1, results2)
+
+  # Close/delete the temporary checkpoint files
+  unlink(temp_checkpoint_dir1, recursive = TRUE)
+  unlink(temp_checkpoint_dir2, recursive = TRUE)
 })
