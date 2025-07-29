@@ -157,12 +157,16 @@ R6Experiment <- R6::R6Class(
 
       checkpoint_iterations <- ceiling(remaining_steps / checkpoint_frequency)
 
+      # Define the checkpoint file name once
+      timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+      checkpoint_file <- file.path(checkpoint_dir, paste0(timestamp, "_checkpoint.rds"))
+
       progressr::with_progress({
         overall_progress <- progressr::progressor(steps = total_steps)
 
         for (checkpoint_iteration in seq_len(checkpoint_iterations)) {
           self$run_checkpoint_iteration(
-            checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_dir, completed_steps, backend, ...
+            checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, ...
           )
         }
       })
@@ -201,15 +205,11 @@ R6Experiment <- R6::R6Class(
 
     #' @description
     #' Save a checkpoint of the experiment.
-    #' @param checkpoint_dir Directory to save the checkpoint.
-    #' @param checkpoint_iteration Current checkpoint iteration.
-    #' @param results Data frame containing results up to the checkpoint.
-    checkpoint = function(checkpoint_dir, checkpoint_iteration) {
-      if (!dir.exists(checkpoint_dir)) {
-        dir.create(checkpoint_dir, recursive = TRUE)
+    #' @param checkpoint_file Directory to save the checkpoint.
+    checkpoint = function(checkpoint_file) {
+      if (!dir.exists(dirname(checkpoint_file))) {
+        dir.create(dirname(checkpoint_file), recursive = TRUE)
       }
-      timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
-      checkpoint_file <- file.path(checkpoint_dir, paste0(timestamp, "_checkpoint.rds"))
       suppressWarnings({
         saveRDS(self, checkpoint_file)
       })
@@ -226,7 +226,7 @@ R6Experiment <- R6::R6Class(
     #' @param checkpoint_dir Directory for saving checkpoints.
     #' @param backend Backend to use for parallelization. Options are "future.apply" (default) or "foreach".
     #' @param ... Additional parameters passed to model simulation.
-    run_checkpoint_iteration = function(checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_dir, completed_steps, backend = "future.apply", ...) {
+    run_checkpoint_iteration = function(checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend = "future.apply", ...) {
       checkpoint_start <- completed_steps + (checkpoint_iteration - 1) * checkpoint_frequency + 1
       checkpoint_end <- min(completed_steps + checkpoint_iteration * checkpoint_frequency, completed_steps + remaining_steps)
 
@@ -234,7 +234,7 @@ R6Experiment <- R6::R6Class(
         checkpoint_results <- future.apply::future_lapply(seq(checkpoint_start, checkpoint_end), function(policy_design_id) {
           overall_progress(sprintf("Running policy design %d", policy_design_id))
           self$run_single_experiment(policy_design_id, ...)
-        }, future.seed=TRUE, future.packages=c("R6Sim", "dplyr"))
+        }, future.seed=TRUE)
         checkpoint_results <- dplyr::bind_rows(checkpoint_results)
       } else if (backend == "foreach") {
         checkpoint_results <- foreach(policy_design_id = seq(checkpoint_start, checkpoint_end), .combine = dplyr::bind_rows, .options.future = list(seed = TRUE)) %dopar% {
@@ -247,7 +247,7 @@ R6Experiment <- R6::R6Class(
 
       self$results <- dplyr::bind_rows(self$results, checkpoint_results)
 
-      self$checkpoint(checkpoint_dir, checkpoint_iteration)
+      self$checkpoint(checkpoint_file)
     }
     ),
 
