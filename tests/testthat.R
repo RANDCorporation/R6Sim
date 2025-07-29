@@ -12,7 +12,7 @@ library(dplyr)
 library(future)
 
 # Set default parallel backend for tests: multicore, multisession or sequential
-options(parallel_backend = "multicore")
+options(parallel_backend = "sequential")
 
 # Set up sequential plan before starting tests.
 future::plan(sequential)

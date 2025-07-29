@@ -226,7 +226,7 @@ R6Experiment <- R6::R6Class(
     #' @param checkpoint_dir Directory for saving checkpoints.
     #' @param backend Backend to use for parallelization. Options are "future.apply" (default) or "foreach".
     #' @param ... Additional parameters passed to model simulation.
-    run_checkpoint_iteration = function(checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend = "future.apply", ...) {
+    run_checkpoint_iteration = function(checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, ...) {
       checkpoint_start <- completed_steps + (checkpoint_iteration - 1) * checkpoint_frequency + 1
       checkpoint_end <- min(completed_steps + checkpoint_iteration * checkpoint_frequency, completed_steps + remaining_steps)
 
@@ -234,7 +234,7 @@ R6Experiment <- R6::R6Class(
         checkpoint_results <- future.apply::future_lapply(seq(checkpoint_start, checkpoint_end), function(policy_design_id) {
           overall_progress(sprintf("Running policy design %d", policy_design_id))
           self$run_single_experiment(policy_design_id, ...)
-        }, future.seed=TRUE)
+        }, future.seed=TRUE, future.packages = c("dplyr", "R6Sim", "progressr"))
         checkpoint_results <- dplyr::bind_rows(checkpoint_results)
       } else if (backend == "foreach") {
         checkpoint_results <- foreach(policy_design_id = seq(checkpoint_start, checkpoint_end), .combine = dplyr::bind_rows, .options.future = list(seed = TRUE)) %dopar% {

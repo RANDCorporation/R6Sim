@@ -24,10 +24,12 @@ Mymodel <- R6::R6Class(
       # Create a sample population with some health events:
       sim_res <- data.frame(
         p.id = 1:self$inputs$pop.size,
-        risk = rnorm(n = self$inputs$pop.size, mean = self$inputs$risk.mean, sd = self$inputs$risk.sd)
-      ) %>%
+        risk = self$inputs$risk.mean
+        #risk = rnorm(n = self$inputs$pop.size, mean = self$inputs$risk.mean, sd = self$inputs$risk.sd
+        ) %>%
         mutate(probability.event = 1 - exp(-risk)) %>%
-        mutate(n.events = rbinom(n = 1:self$inputs$pop.size, size = self$inputs$trials, prob = probability.event)) %>%
+        mutate(n.events = self$inputs$pop.size * self$inputs$trials * probability.event) %>%
+        #mutate(n.events = rbinom(n = 1:self$inputs$pop.size, size = self$inputs$trials, prob = probability.event)) %>%
         group_by() %>%
         summarise(n.events = sum(n.events))
 
