@@ -12,7 +12,9 @@ URL: https://randcorporation.github.io/R6Sim/
 Imports: 
     assertthat,
     data.table,
+    doFuture,
     dplyr,
+    foreach,
     future.apply,
     jsonlite,
     lhs,
@@ -26,11 +28,11 @@ Imports:
     utils,
     yaml
 Suggests: 
+    future,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
-    writexl,
-    future
+    writexl
 VignetteBuilder: 
     knitr
 Config/testthat/edition: 3
