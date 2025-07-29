@@ -99,8 +99,11 @@ test_that("R6Experiment runs in parallel using future", {
   experiment$set_parameter(parameter_name = "Test1", experimental_design = "grid", values = c(1, 2))
   experiment$set_design(n_reps = 3)
 
-  # Set up future for parallel execution
-  plan(multisession, workers = 2)
+  # Assign the parallel backend function
+  backend_fn <- R6Sim:::get_parallel_backend_fn()
+
+  # Use the backend function in the test
+  plan(backend_fn)
 
   # Run in parallel mode
   results <- experiment$run()

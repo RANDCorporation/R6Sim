@@ -71,6 +71,9 @@ R6Experiment <- R6::R6Class(
     #' @field experimental_parameters is a list containing details about each experimental parameter. Experimental parameters can be either policy levers or uncertainties. Defining this distinction is up to the user.
     experimental_parameters = list(),
 
+    #' @field results is a data.frame containing the results of the experiment.
+    results = NULL,
+
     #' @description
     #' This function is used to initialize a `R6Experiment` object. This object represents an experiment that will be run and can encompass multiple models.
     #' @param ... set of R6Sim to be included in the experiment. One `R6Experiment` can contain multiple models of the `c19model` class.
@@ -123,20 +126,48 @@ R6Experiment <- R6::R6Class(
     #' @importFrom dplyr any_of
     #' @importFrom foreach foreach
     #' @importFrom doFuture registerDoFuture
-    #' @importFrom doFuture %dopar%
+    #' @importFrom foreach %dopar%
     #' @importFrom progressr with_progress
     #' @importFrom progressr progressor
     #' @param ... additional parameters passed to model simulation
-    run = function(...) {
+    #' @param checkpoint_frequency Frequency of checkpoints during the experiment. If NULL, defaults to 10% of the experimental design.
+    #' @param checkpoint_dir Directory to save checkpoints. Default is NULL.
+    #' @param backend Backend to use for parallelization. Options are "future.apply" (default) or "foreach".
+    run = function(checkpoint_frequency = NULL, checkpoint_dir = NULL, backend = "future.apply", ...) {
+      if (missing(checkpoint_dir)) {
+        checkpoint_dir <- file.path("experiments")
+      }
+
+      if (is.null(self$results)) {
+        self$results <- data.frame()
+      }
+
+      total_steps <- length(unique(self$policy_design$policy.exp.id))
+      completed_steps <- length(unique(self$results$policy.exp.id))
+      remaining_steps <- total_steps - completed_steps
+
+      if (remaining_steps <= 0) {
+        message("All experiments have already been completed.")
+        return(self$results)
+      }
+
+      if (missing(checkpoint_frequency)) {
+        checkpoint_frequency <- max(1, ceiling(remaining_steps * 0.1))
+      }
+
+      checkpoint_iterations <- ceiling(remaining_steps / checkpoint_frequency)
+
       progressr::with_progress({
-        p <- progressr::progressor(steps = nrow(self$policy_design))
-        results <- foreach(policy_design_id = 1:nrow(self$policy_design), .combine = dplyr::bind_rows, .options.future = list(seed = TRUE)) %dopar% {
-          p(sprintf("Running policy design %d", policy_design_id))
-          self$run_single_experiment(policy_design_id, ...)
+        overall_progress <- progressr::progressor(steps = total_steps)
+
+        for (checkpoint_iteration in seq_len(checkpoint_iterations)) {
+          self$run_checkpoint_iteration(
+            checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_dir, completed_steps, backend, ...
+          )
         }
       })
 
-      return(results)
+      return(self$results)
     },
 
     #' @description
@@ -166,6 +197,54 @@ R6Experiment <- R6::R6Class(
       res <- model$simulate(...) %>% as.data.frame()
 
       return(dplyr::bind_cols(self$policy_design[policy_design_id, ], res))
+    },
+
+    #' @description
+    #' Save a checkpoint of the experiment.
+    #' @param checkpoint_dir Directory to save the checkpoint.
+    #' @param checkpoint_iteration Current checkpoint iteration.
+    #' @param results Data frame containing results up to the checkpoint.
+    checkpoint = function(checkpoint_dir, checkpoint_iteration) {
+      if (!dir.exists(checkpoint_dir)) {
+        dir.create(checkpoint_dir, recursive = TRUE)
+      }
+      timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+      checkpoint_file <- file.path(checkpoint_dir, paste0(timestamp, "_checkpoint.rds"))
+      saveRDS(self, checkpoint_file)
+    },
+
+    #' @description
+    #' Run a single checkpoint iteration
+    #'
+    #' @param checkpoint_iteration Current checkpoint iteration.
+    #' @param checkpoint_frequency Frequency of checkpoints.
+    #' @param total_steps Total number of steps in the experiment.
+    #' @param results Current results data frame.
+    #' @param overall_progress Overall progressor object.
+    #' @param checkpoint_dir Directory for saving checkpoints.
+    #' @param backend Backend to use for parallelization. Options are "future.apply" (default) or "foreach".
+    #' @param ... Additional parameters passed to model simulation.
+    run_checkpoint_iteration = function(checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_dir, completed_steps, backend = "future.apply", ...) {
+      checkpoint_start <- completed_steps + (checkpoint_iteration - 1) * checkpoint_frequency + 1
+      checkpoint_end <- min(completed_steps + checkpoint_iteration * checkpoint_frequency, completed_steps + remaining_steps)
+
+      if (backend == "future.apply") {
+        checkpoint_results <- future.apply::future_lapply(seq(checkpoint_start, checkpoint_end), function(policy_design_id) {
+          overall_progress(sprintf("Running policy design %d", policy_design_id))
+          self$run_single_experiment(policy_design_id, ...)
+        }, future.seed=TRUE) %>% dplyr::bind_rows()
+      } else if (backend == "foreach") {
+        checkpoint_results <- foreach(policy_design_id = seq(checkpoint_start, checkpoint_end), .combine = dplyr::bind_rows, .options.future = list(seed = TRUE)) %dopar% {
+          overall_progress(sprintf("Running policy design %d", policy_design_id))
+          self$run_single_experiment(policy_design_id, ...)
+        }
+      } else {
+        stop("Unsupported backend. Please choose either 'future.apply' or 'foreach'.")
+      }
+
+      self$results <- dplyr::bind_rows(self$results, checkpoint_results)
+
+      self$checkpoint(checkpoint_dir, checkpoint_iteration)
     }
     ),
 

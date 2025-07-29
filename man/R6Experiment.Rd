@@ -28,6 +28,8 @@ Manages experimental designs and execution for R6Sim models.
 \item{\code{set_seed}}{is a T if the experiment will be controlling and setting seeds.}
 
 \item{\code{experimental_parameters}}{is a list containing details about each experimental parameter. Experimental parameters can be either policy levers or uncertainties. Defining this distinction is up to the user.}
+
+\item{\code{results}}{is a data.frame containing the results of the experiment.}
 }
 \if{html}{\out{</div>}}
 }
@@ -39,6 +41,8 @@ Manages experimental designs and execution for R6Sim models.
 \item \href{#method-R6Experiment-set_design}{\code{R6Experiment$set_design()}}
 \item \href{#method-R6Experiment-run}{\code{R6Experiment$run()}}
 \item \href{#method-R6Experiment-run_single_experiment}{\code{R6Experiment$run_single_experiment()}}
+\item \href{#method-R6Experiment-checkpoint}{\code{R6Experiment$checkpoint()}}
+\item \href{#method-R6Experiment-run_checkpoint_iteration}{\code{R6Experiment$run_checkpoint_iteration()}}
 \item \href{#method-R6Experiment-clone}{\code{R6Experiment$clone()}}
 }
 }
@@ -148,12 +152,16 @@ The policy experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` 
 \subsection{Method \code{run()}}{
 Run Experiment
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run(...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run(checkpoint_frequency = NULL, checkpoint_dir = NULL, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{checkpoint_frequency}}{Frequency of checkpoints during the experiment. If NULL, defaults to 10% of the experimental design.}
+
+\item{\code{checkpoint_dir}}{Directory to save checkpoints. Default is NULL.}
+
 \item{\code{...}}{additional parameters passed to model simulation}
 }
 \if{html}{\out{</div>}}
@@ -174,6 +182,64 @@ Run a single experiment
 \item{\code{policy_design_id}}{ID of the policy design to run}
 
 \item{\code{...}}{additional parameters passed to model simulation}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-R6Experiment-checkpoint"></a>}}
+\if{latex}{\out{\hypertarget{method-R6Experiment-checkpoint}{}}}
+\subsection{Method \code{checkpoint()}}{
+Save a checkpoint of the experiment.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$checkpoint(checkpoint_dir, checkpoint_iteration)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{checkpoint_dir}}{Directory to save the checkpoint.}
+
+\item{\code{checkpoint_iteration}}{Current checkpoint iteration.}
+
+\item{\code{results}}{Data frame containing results up to the checkpoint.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-R6Experiment-run_checkpoint_iteration"></a>}}
+\if{latex}{\out{\hypertarget{method-R6Experiment-run_checkpoint_iteration}{}}}
+\subsection{Method \code{run_checkpoint_iteration()}}{
+Run a single checkpoint iteration
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run_checkpoint_iteration(
+  checkpoint_iteration,
+  checkpoint_frequency,
+  remaining_steps,
+  overall_progress,
+  checkpoint_dir,
+  completed_steps,
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{checkpoint_iteration}}{Current checkpoint iteration.}
+
+\item{\code{checkpoint_frequency}}{Frequency of checkpoints.}
+
+\item{\code{overall_progress}}{Overall progressor object.}
+
+\item{\code{checkpoint_dir}}{Directory for saving checkpoints.}
+
+\item{\code{...}}{Additional parameters passed to model simulation.}
+
+\item{\code{total_steps}}{Total number of steps in the experiment.}
+
+\item{\code{results}}{Current results data frame.}
 }
 \if{html}{\out{</div>}}
 }

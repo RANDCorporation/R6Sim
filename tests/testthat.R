@@ -11,4 +11,9 @@ library(R6Sim)
 library(dplyr)
 library(future)
 
+# Set default parallel backend for tests: multicore, multisession or sequential
+options(parallel_backend = "multicore")
+
+
+
 test_check("R6Sim")
