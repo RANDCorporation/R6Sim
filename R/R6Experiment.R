@@ -232,7 +232,7 @@ R6Experiment <- R6::R6Class(
         checkpoint_results <- future.apply::future_lapply(seq(checkpoint_start, checkpoint_end), function(policy_design_id) {
           overall_progress(sprintf("Running policy design %d", policy_design_id))
           self$run_single_experiment(policy_design_id, ...)
-        }, future.seed=TRUE) %>% dplyr::bind_rows()
+        }, future.seed=TRUE, future.packages=c("R6Sim", "dplyr")) %>% dplyr::bind_rows()
       } else if (backend == "foreach") {
         checkpoint_results <- foreach(policy_design_id = seq(checkpoint_start, checkpoint_end), .combine = dplyr::bind_rows, .options.future = list(seed = TRUE)) %dopar% {
           overall_progress(sprintf("Running policy design %d", policy_design_id))
