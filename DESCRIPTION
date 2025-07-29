@@ -29,7 +29,8 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
-    writexl
+    writexl,
+    future
 VignetteBuilder: 
     knitr
 Config/testthat/edition: 3
