@@ -9,5 +9,12 @@
 library(testthat)
 library(R6Sim)
 library(dplyr)
+library(future)
+
+# Set default parallel backend for tests: multicore, multisession or sequential
+options(parallel_backend = "sequential")
+
+# Set up sequential plan before starting tests.
+future::plan(sequential)
 
 test_check("R6Sim")

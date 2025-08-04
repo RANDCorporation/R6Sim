@@ -11,3 +11,5 @@ dev
 ^codecov\.yml$
 ^CLAUDE\.md$
 ^ROADMAP\.md$
+^doc$
+^Meta$

@@ -28,9 +28,6 @@
 #' This function is most useful to simulate the posterior distribution for a single model in parallel in one machine. This function is not used when calibrating the model and not useful for parallelization across multiple nodes.
 #'
 #' @param self model object
-#' @param n_cores number of cores to use
-#' @param parallel whether to evaluate run in parallel
-#' @param cluster_eval_script path to script that instantiates necessary functions. this will often mean sourcing functions external to the package and loading dependencies for the model. needed if parallel = T
 #'
 #' @return results data.frame from all simulations in parallel
 #'

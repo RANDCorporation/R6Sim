@@ -165,8 +165,7 @@ experiment$policy_design %>%
 Now we'll run the experiment across all parameter combinations:
 
 ```{r}
-# Run the experiment (in serial mode for simplicity)
-results <- experiment$run(parallel = FALSE)
+results <- experiment$run()
 
 # Examine the first few results
 head(results)
@@ -265,7 +264,7 @@ Now we can run the stochastic experiment:
 
 ```{r}
 # Run the stochastic experiment
-stochastic_results <- stochastic_experiment$run(parallel = FALSE)
+stochastic_results <- stochastic_experiment$run()
 
 # Examine results with replications
 stochastic_results %>%
@@ -305,7 +304,7 @@ comparison_experiment$set_parameter(
 comparison_experiment$set_design()
 
 # Run the experiment
-comparison_results <- comparison_experiment$run(parallel = FALSE)
+comparison_results <- comparison_experiment$run()
 
 # Analyze results by model and beta
 comparison_results %>%
@@ -323,9 +322,7 @@ You can also run experiments with specific parameter sets or design points:
 
 ```{r}
 # Let's run the experiment again, but only for the first 2 parameter combinations
-selected_results <- experiment$run(
-  parallel = FALSE
-)[1:2, ]
+selected_results <- experiment$run()[1:2, ]
 
 # View the results
 selected_results

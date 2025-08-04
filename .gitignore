@@ -5,3 +5,6 @@
 docs
 inst/doc
 *.DS_Store
+/doc/
+/Meta/
+*.rds

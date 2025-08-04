@@ -28,6 +28,8 @@ Manages experimental designs and execution for R6Sim models.
 \item{\code{set_seed}}{is a T if the experiment will be controlling and setting seeds.}
 
 \item{\code{experimental_parameters}}{is a list containing details about each experimental parameter. Experimental parameters can be either policy levers or uncertainties. Defining this distinction is up to the user.}
+
+\item{\code{results}}{is a data.frame containing the results of the experiment.}
 }
 \if{html}{\out{</div>}}
 }
@@ -38,6 +40,9 @@ Manages experimental designs and execution for R6Sim models.
 \item \href{#method-R6Experiment-set_parameter}{\code{R6Experiment$set_parameter()}}
 \item \href{#method-R6Experiment-set_design}{\code{R6Experiment$set_design()}}
 \item \href{#method-R6Experiment-run}{\code{R6Experiment$run()}}
+\item \href{#method-R6Experiment-run_single_experiment}{\code{R6Experiment$run_single_experiment()}}
+\item \href{#method-R6Experiment-checkpoint}{\code{R6Experiment$checkpoint()}}
+\item \href{#method-R6Experiment-run_checkpoint_iteration}{\code{R6Experiment$run_checkpoint_iteration()}}
 \item \href{#method-R6Experiment-clone}{\code{R6Experiment$clone()}}
 }
 }
@@ -148,11 +153,9 @@ The policy experimental design will have `blocks` \* `n_lhs` \* `n_grid_points` 
 Run Experiment
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run(
-  n_cores = 3,
-  parallel = F,
-  cluster_eval_script = NULL,
-  model_from_cluster_eval = F,
-  packages = NULL,
+  checkpoint_frequency = NULL,
+  checkpoint_dir = NULL,
+  backend = "future.apply",
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -160,23 +163,92 @@ Run Experiment
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{n_cores}}{number of cores to use}
+\item{\code{checkpoint_frequency}}{Frequency of checkpoints during the experiment. If NULL, defaults to 10 percent of the experimental design.}
 
-\item{\code{parallel}}{whether to evaluate run in parallel}
+\item{\code{checkpoint_dir}}{Directory to save checkpoints. Default is NULL.}
 
-\item{\code{cluster_eval_script}}{Optional path to R script that is sourced once in each parallel process before running experiments.
-Useful for model setup that should happen once per process, like:
-- Loading required packages
-- Compiling models (e.g. odin models)
-- Setting up simulation parameters/data
-- Creating model instances for use across runs}
+\item{\code{backend}}{Backend to use for parallelization. Options are future.apply (default) or foreach.}
 
-\item{\code{model_from_cluster_eval}}{If TRUE, expects model instances to be created in cluster_eval_script.
-Set TRUE when model compilation is needed (like with odin).}
+\item{\code{...}}{Additional parameters passed to model simulation.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A data.frame containing the results of the experiment.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-R6Experiment-run_single_experiment"></a>}}
+\if{latex}{\out{\hypertarget{method-R6Experiment-run_single_experiment}{}}}
+\subsection{Method \code{run_single_experiment()}}{
+Run a single experiment
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run_single_experiment(policy_design_id, ...)}\if{html}{\out{</div>}}
+}
 
-\item{\code{packages}}{character vector of packages to be loaded before running the model in parallel.}
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{policy_design_id}}{ID of the policy design to run}
 
 \item{\code{...}}{additional parameters passed to model simulation}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-R6Experiment-checkpoint"></a>}}
+\if{latex}{\out{\hypertarget{method-R6Experiment-checkpoint}{}}}
+\subsection{Method \code{checkpoint()}}{
+Save a checkpoint of the experiment.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$checkpoint(checkpoint_file)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{checkpoint_file}}{Directory to save the checkpoint.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-R6Experiment-run_checkpoint_iteration"></a>}}
+\if{latex}{\out{\hypertarget{method-R6Experiment-run_checkpoint_iteration}{}}}
+\subsection{Method \code{run_checkpoint_iteration()}}{
+Run a single checkpoint iteration
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run_checkpoint_iteration(
+  checkpoint_iteration,
+  checkpoint_frequency,
+  remaining_steps,
+  overall_progress,
+  checkpoint_file,
+  completed_steps,
+  backend,
+  ...
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{checkpoint_iteration}}{Current checkpoint iteration.}
+
+\item{\code{checkpoint_frequency}}{Frequency of checkpoints.}
+
+\item{\code{remaining_steps}}{Number of steps remaining in the experiment.}
+
+\item{\code{overall_progress}}{Overall progressor object for tracking progress.}
+
+\item{\code{checkpoint_file}}{Path to the file where the checkpoint will be saved.}
+
+\item{\code{completed_steps}}{Number of steps already completed in the experiment.}
+
+\item{\code{backend}}{Backend to use for parallelization. Options are "future.apply" (default) or "foreach".}
+
+\item{\code{...}}{Additional parameters passed to model simulation.}
 }
 \if{html}{\out{</div>}}
 }

@@ -30,6 +30,10 @@
 #' @description
 #' Manages experimental designs and execution for R6Sim models.
 #' @import R6
+#' @import progressr
+#' @import future.apply
+#' @import foreach
+#' @import doFuture
 #' @export
 R6Experiment <- R6::R6Class(
   classname = "R6Experiment",
@@ -66,6 +70,9 @@ R6Experiment <- R6::R6Class(
 
     #' @field experimental_parameters is a list containing details about each experimental parameter. Experimental parameters can be either policy levers or uncertainties. Defining this distinction is up to the user.
     experimental_parameters = list(),
+
+    #' @field results is a data.frame containing the results of the experiment.
+    results = NULL,
 
     #' @description
     #' This function is used to initialize a `R6Experiment` object. This object represents an experiment that will be run and can encompass multiple models.
@@ -114,24 +121,137 @@ R6Experiment <- R6::R6Class(
     #' @description
     #' Run Experiment
     #'
-    #' @param n_cores number of cores to use
-    #' @param parallel whether to evaluate run in parallel
-    #' @param cluster_eval_script Optional path to R script that is sourced once in each parallel process before running experiments.
-    #'        Useful for model setup that should happen once per process, like:
-    #'        - Loading required packages
-    #'        - Compiling models (e.g. odin models)
-    #'        - Setting up simulation parameters/data
-    #'        - Creating model instances for use across runs
-    #' @param model_from_cluster_eval If TRUE, expects model instances to be created in cluster_eval_script.
-    #'        Set TRUE when model compilation is needed (like with odin).
-    #' @param packages character vector of packages to be loaded before running the model in parallel.
+    #' @importFrom dplyr bind_rows
+    #' @importFrom dplyr select
+    #' @importFrom dplyr any_of
+    #' @importFrom foreach foreach
+    #' @importFrom doFuture registerDoFuture
+    #' @importFrom foreach %dopar%
+    #' @importFrom progressr with_progress
+    #' @importFrom progressr progressor
+    #'
+    #' @param checkpoint_frequency Frequency of checkpoints during the experiment. If NULL, defaults to 10 percent of the experimental design.
+    #' @param checkpoint_dir Directory to save checkpoints. Default is NULL.
+    #' @param backend Backend to use for parallelization. Options are future.apply (default) or foreach.
+    #' @param ... Additional parameters passed to model simulation.
+    #' @return A data.frame containing the results of the experiment.
+    run = function(checkpoint_frequency = NULL, checkpoint_dir = NULL, backend = "future.apply", ...) {
+        if (missing(checkpoint_dir)) {
+            checkpoint_dir <- file.path("experiments")
+        }
+
+        if (is.null(self$results)) {
+            self$results <- data.frame()
+        }
+
+        total_steps <- length(unique(self$policy_design$policy.exp.id))
+        completed_steps <- length(unique(self$results$policy.exp.id))
+        remaining_steps <- total_steps - completed_steps
+
+        if (remaining_steps <= 0) {
+            message("All experiments have already been completed.")
+            return(self$results)
+        }
+
+        if (missing(checkpoint_frequency)) {
+            checkpoint_frequency <- max(1, ceiling(remaining_steps * 0.1))
+        }
+
+        checkpoint_iterations <- ceiling(remaining_steps / checkpoint_frequency)
+
+        # Define the checkpoint file name once
+        timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+        checkpoint_file <- file.path(checkpoint_dir, paste0(timestamp, "_checkpoint.rds"))
+
+        progressr::with_progress({
+          overall_progress <- progressr::progressor(steps = total_steps)
+
+          for (checkpoint_iteration in seq_len(checkpoint_iterations)) {
+            self$run_checkpoint_iteration(
+              checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, ...
+            )
+          }
+        })
+
+        return(self$results)
+    },
+
+    #' @description
+    #' Run a single experiment
+    #'
+    #' @param policy_design_id ID of the policy design to run
     #' @param ... additional parameters passed to model simulation
-    run = function(n_cores = 3, parallel = F, cluster_eval_script = NULL,
-                   model_from_cluster_eval = F, packages = NULL, ...) {
-      R6Experiment_run(self = self, n_cores = n_cores, parallel = parallel,
-                       cluster_eval_script = cluster_eval_script,
-                       model_from_cluster_eval = model_from_cluster_eval, packages = packages, ...)
-    }),
+    run_single_experiment = function(policy_design_id, ...) {
+      model <- self$models[[self$policy_design$model.id[policy_design_id]]]
+
+      id_cols <- c("grid.id", "lhs.id", "params_design.id", "param.id", "model.id", "all.params.id", "policy.exp.id", "rep.id", "seed")
+
+      scenario_inputs <- self$policy_design[policy_design_id, ] %>%
+        select(-any_of(id_cols)) %>%
+        as.data.frame()
+
+      # Set each input
+      for (var in names(scenario_inputs)) {
+        model$set_input(var, scenario_inputs[, var])
+      }
+
+      # If setting seed, do it
+      if(self$set_seed) {
+        set.seed(self$policy_design[policy_design_id, ]$seed)
+      }
+
+      res <- model$simulate(...) %>% as.data.frame()
+
+      return(dplyr::bind_cols(self$policy_design[policy_design_id, ], res))
+    },
+
+    #' @description
+    #' Save a checkpoint of the experiment.
+    #' @param checkpoint_file Directory to save the checkpoint.
+    checkpoint = function(checkpoint_file) {
+      if (!dir.exists(dirname(checkpoint_file))) {
+        dir.create(dirname(checkpoint_file), recursive = TRUE)
+      }
+      suppressWarnings({
+        saveRDS(self, checkpoint_file)
+      })
+    },
+
+    #' @description
+    #' Run a single checkpoint iteration
+    #'
+    #' @param checkpoint_iteration Current checkpoint iteration.
+    #' @param checkpoint_frequency Frequency of checkpoints.
+    #' @param remaining_steps Number of steps remaining in the experiment.
+    #' @param overall_progress Overall progressor object for tracking progress.
+    #' @param checkpoint_file Path to the file where the checkpoint will be saved.
+    #' @param completed_steps Number of steps already completed in the experiment.
+    #' @param backend Backend to use for parallelization. Options are "future.apply" (default) or "foreach".
+    #' @param ... Additional parameters passed to model simulation.
+    run_checkpoint_iteration = function(checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, ...) {
+      checkpoint_start <- completed_steps + (checkpoint_iteration - 1) * checkpoint_frequency + 1
+      checkpoint_end <- min(completed_steps + checkpoint_iteration * checkpoint_frequency, completed_steps + remaining_steps)
+
+      if (backend == "future.apply") {
+        checkpoint_results <- future.apply::future_lapply(seq(checkpoint_start, checkpoint_end), function(policy_design_id) {
+          overall_progress(sprintf("Running policy design %d", policy_design_id))
+          self$run_single_experiment(policy_design_id, ...)
+        }, future.seed=TRUE, future.packages = c("dplyr", "R6Sim", "progressr"))
+        checkpoint_results <- dplyr::bind_rows(checkpoint_results)
+      } else if (backend == "foreach") {
+        checkpoint_results <- foreach(policy_design_id = seq(checkpoint_start, checkpoint_end), .combine = dplyr::bind_rows, .options.future = list(seed = TRUE)) %dofuture% {
+          overall_progress(sprintf("Running policy design %d", policy_design_id))
+          self$run_single_experiment(policy_design_id, ...)
+        }
+      } else {
+        stop("Unsupported backend. Please choose either 'future.apply' or 'foreach'.")
+      }
+
+      self$results <- dplyr::bind_rows(self$results, checkpoint_results)
+
+      self$checkpoint(checkpoint_file)
+    }
+    ),
 
   # Use private to hold data that will not be accessed by the user directly.
   private = list(

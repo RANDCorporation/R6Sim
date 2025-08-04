@@ -102,7 +102,12 @@ experiment$
   set_parameter(parameter_name = "risk.mean",experimental_design = "grid",values = seq.default(from = 0.01, to = 0.05, by = 0.01))$
   set_design()
 
-results <- experiment$run(parallel = F, model_from_cluster_eval = F)
+# This package uses future.apply to run experiments, so you can run experments 
+# in parallel by doing
+# library(future)
+# future::plan(multisession, workers = 2)
+
+results <- experiment$run()
 
 # model.id =1 is the first model passed to experiment, and so on:
 results %>%

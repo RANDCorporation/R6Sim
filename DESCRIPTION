@@ -12,11 +12,15 @@ URL: https://randcorporation.github.io/R6Sim/
 Imports: 
     assertthat,
     data.table,
+    doFuture,
     dplyr,
+    foreach,
+    future,
+    future.apply,
     jsonlite,
     lhs,
     magrittr,
-    parallel,
+    progressr,
     purrr,
     R6,
     readxl,
@@ -25,8 +29,6 @@ Imports:
     utils,
     yaml
 Suggests: 
-    deSolve,
-    ggplot2,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
