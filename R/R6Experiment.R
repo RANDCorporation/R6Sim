@@ -136,7 +136,7 @@ R6Experiment <- R6::R6Class(
     #' @param graceful Logical indicating whether to handle errors gracefully. If TRUE, errors are caught and logged as warnings, and the experiment continues. Default is FALSE.
     #' @param ... Additional parameters passed to model simulation.
     #' @return A data.frame containing the results of the experiment.
-    run = function(checkpoint_frequency = NULL, checkpoint_dir = NULL, backend = "future.apply", graceful = FALSE, ...) {
+    run = function(checkpoint_frequency = NULL, checkpoint_dir = NULL, backend = "future.apply", graceful = TRUE, ...) {
         if (missing(checkpoint_dir)) {
             checkpoint_dir <- file.path("experiments")
         }
@@ -183,7 +183,7 @@ R6Experiment <- R6::R6Class(
     #' @param policy_design_id ID of the policy design to run
     #' @param graceful Logical indicating whether to handle errors gracefully. If TRUE, errors are caught and logged as warnings. Default is FALSE.
     #' @param ... additional parameters passed to model simulation
-    run_single_experiment = function(policy_design_id, graceful = FALSE, ...) {
+    run_single_experiment = function(policy_design_id, graceful, ...) {
       model <- self$models[[self$policy_design$model.id[policy_design_id]]]
 
       id_cols <- c("grid.id", "lhs.id", "params_design.id", "param.id", "model.id", "all.params.id", "policy.exp.id", "rep.id", "seed")
@@ -241,7 +241,7 @@ R6Experiment <- R6::R6Class(
     #' @param backend Backend to use for parallelization. Options are "future.apply" (default) or "foreach".
     #' @param graceful Logical indicating whether to handle errors gracefully. If TRUE, errors are caught and logged as warnings. Default is FALSE.
     #' @param ... Additional parameters passed to model simulation.
-    run_checkpoint_iteration = function(checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, graceful = FALSE, ...) {
+    run_checkpoint_iteration = function(checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, graceful, ...) {
       checkpoint_start <- completed_steps + (checkpoint_iteration - 1) * checkpoint_frequency + 1
       checkpoint_end <- min(completed_steps + checkpoint_iteration * checkpoint_frequency, completed_steps + remaining_steps)
 
