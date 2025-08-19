@@ -156,6 +156,7 @@ Run Experiment
   checkpoint_frequency = NULL,
   checkpoint_dir = NULL,
   backend = "future.apply",
+  graceful = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -168,6 +169,8 @@ Run Experiment
 \item{\code{checkpoint_dir}}{Directory to save checkpoints. Default is NULL.}
 
 \item{\code{backend}}{Backend to use for parallelization. Options are future.apply (default) or foreach.}
+
+\item{\code{graceful}}{Logical indicating whether to handle errors gracefully. If TRUE, errors are caught and logged as warnings, and the experiment continues. Default is FALSE.}
 
 \item{\code{...}}{Additional parameters passed to model simulation.}
 }
@@ -183,13 +186,15 @@ A data.frame containing the results of the experiment.
 \subsection{Method \code{run_single_experiment()}}{
 Run a single experiment
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run_single_experiment(policy_design_id, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{R6Experiment$run_single_experiment(policy_design_id, graceful = FALSE, ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{policy_design_id}}{ID of the policy design to run}
+
+\item{\code{graceful}}{Logical indicating whether to handle errors gracefully. If TRUE, errors are caught and logged as warnings. Default is FALSE.}
 
 \item{\code{...}}{additional parameters passed to model simulation}
 }
@@ -227,6 +232,7 @@ Run a single checkpoint iteration
   checkpoint_file,
   completed_steps,
   backend,
+  graceful = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -247,6 +253,8 @@ Run a single checkpoint iteration
 \item{\code{completed_steps}}{Number of steps already completed in the experiment.}
 
 \item{\code{backend}}{Backend to use for parallelization. Options are "future.apply" (default) or "foreach".}
+
+\item{\code{graceful}}{Logical indicating whether to handle errors gracefully. If TRUE, errors are caught and logged as warnings. Default is FALSE.}
 
 \item{\code{...}}{Additional parameters passed to model simulation.}
 }

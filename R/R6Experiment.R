@@ -133,9 +133,10 @@ R6Experiment <- R6::R6Class(
     #' @param checkpoint_frequency Frequency of checkpoints during the experiment. If NULL, defaults to 10 percent of the experimental design.
     #' @param checkpoint_dir Directory to save checkpoints. Default is NULL.
     #' @param backend Backend to use for parallelization. Options are future.apply (default) or foreach.
+    #' @param graceful Logical indicating whether to handle errors gracefully. If TRUE, errors are caught and logged as warnings, and the experiment continues. Default is FALSE.
     #' @param ... Additional parameters passed to model simulation.
     #' @return A data.frame containing the results of the experiment.
-    run = function(checkpoint_frequency = NULL, checkpoint_dir = NULL, backend = "future.apply", ...) {
+    run = function(checkpoint_frequency = NULL, checkpoint_dir = NULL, backend = "future.apply", graceful = TRUE, ...) {
         if (missing(checkpoint_dir)) {
             checkpoint_dir <- file.path("experiments")
         }
@@ -168,7 +169,7 @@ R6Experiment <- R6::R6Class(
 
           for (checkpoint_iteration in seq_len(checkpoint_iterations)) {
             self$run_checkpoint_iteration(
-              checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, ...
+              checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, graceful, ...
             )
           }
         })
@@ -180,8 +181,9 @@ R6Experiment <- R6::R6Class(
     #' Run a single experiment
     #'
     #' @param policy_design_id ID of the policy design to run
+    #' @param graceful Logical indicating whether to handle errors gracefully. If TRUE, errors are caught and logged as warnings. Default is FALSE.
     #' @param ... additional parameters passed to model simulation
-    run_single_experiment = function(policy_design_id, ...) {
+    run_single_experiment = function(policy_design_id, graceful, ...) {
       model <- self$models[[self$policy_design$model.id[policy_design_id]]]
 
       id_cols <- c("grid.id", "lhs.id", "params_design.id", "param.id", "model.id", "all.params.id", "policy.exp.id", "rep.id", "seed")
@@ -200,7 +202,17 @@ R6Experiment <- R6::R6Class(
         set.seed(self$policy_design[policy_design_id, ]$seed)
       }
 
-      res <- model$simulate(...) %>% as.data.frame()
+      # Graceful error handling implementation
+      if (graceful) {
+        res <- tryCatch({
+          model$simulate(...) %>% as.data.frame()
+        }, error = function(e) {
+          warning("Error in experiment ", policy_design_id, ": ", e$message, call. = FALSE)
+          data.frame(error = e$message)
+        })
+      } else {
+        res <- model$simulate(...) %>% as.data.frame()
+      }
 
       return(dplyr::bind_cols(self$policy_design[policy_design_id, ], res))
     },
@@ -227,21 +239,22 @@ R6Experiment <- R6::R6Class(
     #' @param checkpoint_file Path to the file where the checkpoint will be saved.
     #' @param completed_steps Number of steps already completed in the experiment.
     #' @param backend Backend to use for parallelization. Options are "future.apply" (default) or "foreach".
+    #' @param graceful Logical indicating whether to handle errors gracefully. If TRUE, errors are caught and logged as warnings. Default is FALSE.
     #' @param ... Additional parameters passed to model simulation.
-    run_checkpoint_iteration = function(checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, ...) {
+    run_checkpoint_iteration = function(checkpoint_iteration, checkpoint_frequency, remaining_steps, overall_progress, checkpoint_file, completed_steps, backend, graceful, ...) {
       checkpoint_start <- completed_steps + (checkpoint_iteration - 1) * checkpoint_frequency + 1
       checkpoint_end <- min(completed_steps + checkpoint_iteration * checkpoint_frequency, completed_steps + remaining_steps)
 
       if (backend == "future.apply") {
         checkpoint_results <- future.apply::future_lapply(seq(checkpoint_start, checkpoint_end), function(policy_design_id) {
           overall_progress(sprintf("Running policy design %d", policy_design_id))
-          self$run_single_experiment(policy_design_id, ...)
+          self$run_single_experiment(policy_design_id, graceful, ...)
         }, future.seed=TRUE, future.packages = c("dplyr", "R6Sim", "progressr"))
         checkpoint_results <- dplyr::bind_rows(checkpoint_results)
       } else if (backend == "foreach") {
         checkpoint_results <- foreach(policy_design_id = seq(checkpoint_start, checkpoint_end), .combine = dplyr::bind_rows, .options.future = list(seed = TRUE)) %dofuture% {
           overall_progress(sprintf("Running policy design %d", policy_design_id))
-          self$run_single_experiment(policy_design_id, ...)
+          self$run_single_experiment(policy_design_id, graceful, ...)
         }
       } else {
         stop("Unsupported backend. Please choose either 'future.apply' or 'foreach'.")
